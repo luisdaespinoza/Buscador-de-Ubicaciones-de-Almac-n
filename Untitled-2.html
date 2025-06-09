@@ -73,13 +73,20 @@
             padding: 10px 0;
             border-bottom: 1px dashed #eee;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column; /* Changed to column for better stacking of info */
+            align-items: flex-start;
             flex-wrap: wrap;
         }
 
         .result-item:last-child {
             border-bottom: none;
+        }
+
+        .result-item div { /* New div to hold label and value */
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 5px; /* Spacing between rows */
         }
 
         .result-item span {
@@ -175,7 +182,7 @@
     <div class="container">
         <h1>Buscador de Ubicaciones de Almacén</h1>
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Escribe la unidad de almacén (ej: 1101-01, 378...)">
+            <input type="text" id="searchInput" placeholder="Escribe la unidad, ubicación o material (ej: 1101-01, 378, A101...)">
         </div>
         <div class="results-container" id="results">
             <div class="no-results" style="color: #666;">Cargando datos...</div>
@@ -190,7 +197,7 @@
     <script>
         let storageData = []; // Variable para almacenar todos los datos cargados
         let currentPage = 1;
-        const recordsPerPage = 50; // Número de elementos a mostrar por página
+        const recordsPerPage = 100; // Número de elementos a mostrar por página
         let currentFilteredData = []; // Almacena los datos filtrados para paginación
 
         const searchInput = document.getElementById('searchInput');
@@ -210,7 +217,7 @@
             if (totalResults === 0) {
                 paginationControlsDiv.style.display = 'none'; // Ocultar si no hay resultados
             } else {
-                paginationControlsDiv.style.display = 'flex'; // Mostrar si hay resultados
+                paginationControlsDiv.display = 'flex'; // Mostrar si hay resultados
             }
         }
 
@@ -221,7 +228,7 @@
             if (currentFilteredData.length === 0) {
                 const noResults = document.createElement('div');
                 noResults.classList.add('no-results');
-                noResults.textContent = 'No tiene ubicación.';
+                noResults.textContent = 'No se encontraron resultados.';
                 resultsDiv.appendChild(noResults);
                 updatePaginationControls(0); // Actualizar controles para 0 resultados
                 return;
@@ -232,14 +239,12 @@
             const paginatedItems = currentFilteredData.slice(startIndex, endIndex);
 
             paginatedItems.forEach(item => {
-                // Obtener solo la primera parte de la ubicación para mostrar
-                const displayLocation = item.location.split(' ')[0].trim();
-
                 const resultItem = document.createElement('div');
                 resultItem.classList.add('result-item');
                 resultItem.innerHTML = `
-                    <span>Ubicación: <strong>${displayLocation}</strong></span>
-                    <span>Unidad: <strong>${item.unit}</strong></span>
+                    <div><span>Ubicación:</span> <strong>${item.location}</strong></div>
+                    <div><span>Material:</span> <strong>${item.material}</strong></div>
+                    <div><span>Unidad:</span> <strong>${item.unit}</strong></div>
                 `;
                 resultsDiv.appendChild(resultItem);
             });
@@ -262,10 +267,14 @@
                 // Procesa el texto para convertirlo en el formato de array de objetos
                 storageData = textData.trim().split('\n').filter(line => line.includes('\t')).map(line => {
                     const parts = line.split('\t');
+                    // Ensure each part exists before trimming
                     const locationPart = parts[0] ? parts[0].trim() : 'Sin Ubicación';
-                    const unitPart = parts[1] ? parts[1].trim() : 'Sin Unidad';
+                    const materialPart = parts[1] ? parts[1].trim() : 'Sin Material'; // New: Material part
+                    const unitPart = parts[2] ? parts[2].trim() : 'Sin Unidad';     // Updated index for unit
+
                     return {
                         location: locationPart,
+                        material: materialPart, // Assign new material property
                         unit: unitPart
                     };
                 });
@@ -287,6 +296,7 @@
             // Refiltrar todos los datos basándose en el nuevo término de búsqueda
             currentFilteredData = storageData.filter(item =>
                 item.location.toLowerCase().includes(searchTerm) ||
+                item.material.toLowerCase().includes(searchTerm) || // Include material in search
                 item.unit.toLowerCase().includes(searchTerm)
             );
             currentPage = 1; // Reiniciar a la primera página para una nueva búsqueda
