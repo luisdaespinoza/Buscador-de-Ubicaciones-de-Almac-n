@@ -103,6 +103,16 @@
             box-sizing: border-box;
             word-break: break-all; /* Ensures long numbers wrap */
         }
+        
+        .result-item .full-text { /* Style for the full text description */
+            width: 100%;
+            text-align: left;
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 5px;
+            word-wrap: break-word; /* Ensure long text wraps */
+        }
+
 
         .no-results {
             text-align: center;
@@ -182,7 +192,7 @@
     <div class="container">
         <h1>Buscador de Ubicaciones de Almacén</h1>
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Escribe la unidad, ubicación o material (ej: 1101-01, 378, A101...)">
+            <input type="text" id="searchInput" placeholder="Escribe la unidad, ubicación, material o texto (ej: 1101-01, 378, A101...)">
         </div>
         <div class="results-container" id="results">
             <div class="no-results" style="color: #666;">Cargando datos...</div>
@@ -217,7 +227,7 @@
             if (totalResults === 0) {
                 paginationControlsDiv.style.display = 'none'; // Ocultar si no hay resultados
             } else {
-                paginationControlsDiv.display = 'flex'; // Mostrar si hay resultados
+                paginationControlsDiv.style.display = 'flex'; // Mostrar si hay resultados
             }
         }
 
@@ -245,7 +255,7 @@
                     <div><span>Ubicación:</span> <strong>${item.location}</strong></div>
                     <div><span>Material:</span> <strong>${item.material}</strong></div>
                     <div><span>Unidad:</span> <strong>${item.unit}</strong></div>
-                `;
+                    <div class="full-text"><span>Texto:</span> ${item.text}</div> `;
                 resultsDiv.appendChild(resultItem);
             });
 
@@ -269,13 +279,15 @@
                     const parts = line.split('\t');
                     // Ensure each part exists before trimming
                     const locationPart = parts[0] ? parts[0].trim() : 'Sin Ubicación';
-                    const materialPart = parts[1] ? parts[1].trim() : 'Sin Material'; // New: Material part
-                    const unitPart = parts[2] ? parts[2].trim() : 'Sin Unidad';     // Updated index for unit
+                    const materialPart = parts[1] ? parts[1].trim() : 'Sin Material';
+                    const unitPart = parts[2] ? parts[2].trim() : 'Sin Unidad';
+                    const textPart = parts[3] ? parts[3].trim() : 'Sin Texto'; // New: Text part
 
                     return {
                         location: locationPart,
-                        material: materialPart, // Assign new material property
-                        unit: unitPart
+                        material: materialPart,
+                        unit: unitPart,
+                        text: textPart // Assign new text property
                     };
                 });
 
@@ -296,8 +308,9 @@
             // Refiltrar todos los datos basándose en el nuevo término de búsqueda
             currentFilteredData = storageData.filter(item =>
                 item.location.toLowerCase().includes(searchTerm) ||
-                item.material.toLowerCase().includes(searchTerm) || // Include material in search
-                item.unit.toLowerCase().includes(searchTerm)
+                item.material.toLowerCase().includes(searchTerm) ||
+                item.unit.toLowerCase().includes(searchTerm) ||
+                item.text.toLowerCase().includes(searchTerm) // Include text in search
             );
             currentPage = 1; // Reiniciar a la primera página para una nueva búsqueda
             displayPaginatedResults(); // Mostrar resultados para la nueva búsqueda
