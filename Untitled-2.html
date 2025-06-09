@@ -104,6 +104,44 @@
             font-weight: 500;
         }
 
+        /* Pagination controls */
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 15px; /* Spacing between elements */
+        }
+
+        .pagination-button {
+            padding: 8px 15px;
+            border: 1px solid var(--primary-color);
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: #fff;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, opacity 0.3s ease;
+        }
+
+        .pagination-button:hover:not(:disabled) {
+            background-color: #004494; /* Darker shade on hover */
+        }
+
+        .pagination-button:disabled {
+            background-color: #cccccc;
+            border-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #pageInfo {
+            font-weight: 600;
+            color: var(--primary-color);
+            min-width: 120px; /* Ensure consistent width */
+            text-align: center;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 480px) {
             .container {
@@ -142,30 +180,88 @@
         <div class="results-container" id="results">
             <div class="no-results" style="color: #666;">Cargando datos...</div>
         </div>
+        <div class="pagination-controls">
+            <button id="prevPage" class="pagination-button">&laquo; Anterior</button>
+            <span id="pageInfo">Página 1 de 1</span>
+            <button id="nextPage" class="pagination-button">Siguiente &raquo;</button>
+        </div>
     </div>
 
     <script>
-        let storageData = []; // Variable para almacenar los datos, inicializada vacía
+        let storageData = []; // Variable para almacenar todos los datos cargados
+        let currentPage = 1;
+        const recordsPerPage = 50; // Número de elementos a mostrar por página
+        let currentFilteredData = []; // Almacena los datos filtrados para paginación
 
         const searchInput = document.getElementById('searchInput');
         const resultsDiv = document.getElementById('results');
+        const prevPageButton = document.getElementById('prevPage');
+        const nextPageButton = document.getElementById('nextPage');
+        const pageInfoSpan = document.getElementById('pageInfo');
+        const paginationControlsDiv = document.querySelector('.pagination-controls'); // Referencia al contenedor de paginación
 
-        // Función para cargar los datos
+        // Función para actualizar los controles de paginación (botones y texto)
+        function updatePaginationControls(totalResults) {
+            const totalPages = Math.ceil(totalResults / recordsPerPage);
+            pageInfoSpan.textContent = `Página ${currentPage} de ${totalPages}`;
+            prevPageButton.disabled = currentPage === 1;
+            nextPageButton.disabled = currentPage === totalPages || totalPages === 0;
+
+            if (totalResults === 0) {
+                paginationControlsDiv.style.display = 'none'; // Ocultar si no hay resultados
+            } else {
+                paginationControlsDiv.style.display = 'flex'; // Mostrar si hay resultados
+            }
+        }
+
+        // Función para mostrar los resultados de la página actual
+        function displayPaginatedResults() {
+            resultsDiv.innerHTML = ''; // Limpiar resultados anteriores
+
+            if (currentFilteredData.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.classList.add('no-results');
+                noResults.textContent = 'No tiene ubicación.';
+                resultsDiv.appendChild(noResults);
+                updatePaginationControls(0); // Actualizar controles para 0 resultados
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * recordsPerPage;
+            const endIndex = startIndex + recordsPerPage;
+            const paginatedItems = currentFilteredData.slice(startIndex, endIndex);
+
+            paginatedItems.forEach(item => {
+                // Obtener solo la primera parte de la ubicación para mostrar
+                const displayLocation = item.location.split(' ')[0].trim();
+
+                const resultItem = document.createElement('div');
+                resultItem.classList.add('result-item');
+                resultItem.innerHTML = `
+                    <span>Ubicación: <strong>${displayLocation}</strong></span>
+                    <span>Unidad: <strong>${item.unit}</strong></span>
+                `;
+                resultsDiv.appendChild(resultItem);
+            });
+
+            updatePaginationControls(currentFilteredData.length);
+        }
+
+        // Función para cargar los datos desde el archivo
         async function loadData() {
             try {
-                // Realiza una petición para obtener el contenido del archivo almacen_data.txt
+                resultsDiv.innerHTML = `<div class="no-results" style="color: #666;">Cargando datos...</div>`;
                 const response = await fetch('almacen_data.txt');
 
                 if (!response.ok) {
                     throw new Error(`Error HTTP: ${response.status} - ${response.statusText || 'Desconocido'}`);
                 }
 
-                const textData = await response.text(); // Obtiene el contenido como texto
+                const textData = await response.text();
 
                 // Procesa el texto para convertirlo en el formato de array de objetos
-                // Cambiado ' ' por '\t' para el separador de tabulaciones y para el filtro.
                 storageData = textData.trim().split('\n').filter(line => line.includes('\t')).map(line => {
-                    const parts = line.split('\t'); // <--- CAMBIO AQUÍ
+                    const parts = line.split('\t');
                     const locationPart = parts[0] ? parts[0].trim() : 'Sin Ubicación';
                     const unitPart = parts[1] ? parts[1].trim() : 'Sin Unidad';
                     return {
@@ -174,8 +270,10 @@
                     };
                 });
 
-                // Una vez que los datos están cargados, muestra todos los resultados iniciales
-                displayResults('');
+                // Inicializar los datos filtrados y mostrar la primera página
+                currentFilteredData = storageData;
+                currentPage = 1; // Reiniciar a la primera página después de cargar
+                displayPaginatedResults(); // Mostrar resultados paginados iniciales
 
             } catch (error) {
                 console.error('Error al cargar los datos:', error);
@@ -183,41 +281,33 @@
             }
         }
 
+        // Event listener para el campo de búsqueda
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
-            displayResults(searchTerm);
-        });
-
-        function displayResults(searchTerm) {
-            resultsDiv.innerHTML = ''; // Clear previous results
-
-            // Filter data based on search term matching either full location or unit
-            const filteredData = storageData.filter(item =>
+            // Refiltrar todos los datos basándose en el nuevo término de búsqueda
+            currentFilteredData = storageData.filter(item =>
                 item.location.toLowerCase().includes(searchTerm) ||
                 item.unit.toLowerCase().includes(searchTerm)
             );
+            currentPage = 1; // Reiniciar a la primera página para una nueva búsqueda
+            displayPaginatedResults(); // Mostrar resultados para la nueva búsqueda
+        });
 
-            if (filteredData.length > 0) {
-                // Loop through all filtered items and display them
-                filteredData.forEach(item => {
-                    // Get only the first part of the location for display
-                    const displayLocation = item.location.split(' ')[0].trim(); // Este sigue siendo un espacio si tu ubicación en el archivo es "1101-01 ABC", si es solo "1101-01" no afecta.
-
-                    const resultItem = document.createElement('div');
-                    resultItem.classList.add('result-item');
-                    resultItem.innerHTML = `
-                        <span>Ubicación: <strong>${displayLocation}</strong></span>
-                        <span>Unidad: <strong>${item.unit}</strong></span>
-                    `;
-                    resultsDiv.appendChild(resultItem);
-                });
-            } else {
-                const noResults = document.createElement('div');
-                noResults.classList.add('no-results');
-                noResults.textContent = 'No tiene ubicación.';
-                resultsDiv.appendChild(noResults);
+        // Event listeners para los botones de paginación
+        prevPageButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                displayPaginatedResults();
             }
-        }
+        });
+
+        nextPageButton.addEventListener('click', () => {
+            const totalPages = Math.ceil(currentFilteredData.length / recordsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayPaginatedResults();
+            }
+        });
 
         // Llama a la función para cargar los datos cuando la página se carga
         loadData();
