@@ -474,6 +474,16 @@
 
         // New: Function to start the barcode scanner
         function startBarcodeScanner() {
+            // Check if camera API is supported
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                scannerContainer.innerHTML = '<div class="loading-message" style="color: red;">Tu navegador no soporta la API de la cámara o no tiene permisos. Por favor, actualiza tu navegador o revisa la configuración de permisos.</div>';
+                console.error('Error: navigator.mediaDevices.getUserMedia no está soportado en este navegador.');
+                return;
+            }
+
+            // Clear previous content in the scanner container
+            scannerContainer.innerHTML = '<div class="loading-message">Cargando cámara...</div>';
+
             if (quaggaInitialized) {
                 Quagga.start(); // If already initialized, just start
                 return;
@@ -494,7 +504,14 @@
             }, function(err) {
                 if (err) {
                     console.error('Error al iniciar Quagga:', err);
-                    scannerContainer.innerHTML = '<div class="loading-message" style="color: red;">Error al iniciar la cámara. Asegúrate de que tu navegador tenga permisos de cámara.</div>';
+                    scannerContainer.innerHTML = `
+                        <div class="loading-message" style="color: red;">
+                            Error al iniciar la cámara: ${err.message || err}.<br>
+                            Asegúrate de:<br>
+                            1. Conceder permisos de cámara al navegador.<br>
+                            2. Estar usando un servidor web local (ej: Live Server) o HTTPS.
+                        </div>
+                    `;
                     return;
                 }
                 console.log("QuaggaJS inicializado. Iniciando escaneo...");
