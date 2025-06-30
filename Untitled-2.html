@@ -474,7 +474,9 @@
         });
 
         // New: Function to start the barcode scanner
-        function startBarcodeScanner() {
+        async function startBarcodeScanner() {
+            console.log('Intentando iniciar escáner de código de barras...');
+
             // Check if camera API is supported
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 scannerContainer.innerHTML = '<div class="loading-message" style="color: red;">Tu navegador no soporta la API de la cámara o no tiene permisos. Por favor, actualiza tu navegador o revisa la configuración de permisos.</div>';
@@ -498,31 +500,75 @@
             }
 
             if (quaggaInitialized) {
-                Quagga.start(); // If already initialized, just start
+                console.log('Quagga ya inicializado, reiniciando...');
+                Quagga.start();
                 return;
+            }
+
+            let constraints = {
+                facingMode: "environment" // Try rear camera first
+            };
+
+            try {
+                // Try to get media stream with environment facing mode
+                await navigator.mediaDevices.getUserMedia({ video: constraints });
+                console.log('Cámara con facingMode: "environment" disponible.');
+            } catch (error) {
+                console.warn('No se pudo usar facingMode: "environment". Intentando sin facingMode específico.', error);
+                // If environment facing mode fails, try without specific facingMode
+                constraints = {};
+                try {
+                    await navigator.mediaDevices.getUserMedia({ video: constraints });
+                    console.log('Cámara sin facingMode específico disponible.');
+                } catch (err) {
+                    console.error('Error al acceder a la cámara con cualquier facingMode:', err);
+                    let errorMessage = `
+                        <div class="loading-message" style="color: red;">
+                            Error de acceso a la cámara: <strong>${err.name || err.message}</strong>.<br><br>
+                            Esto puede deberse a:<br>
+                            1.  <strong>No hay cámara disponible:</strong> Tu dispositivo no tiene cámara o está deshabilitada.<br>
+                            2.  <strong>Cámara en uso:</strong> Otra aplicación (ej. Zoom, otra pestaña del navegador) la está utilizando.<br>
+                            3.  <strong>Permisos:</strong> No has concedido permiso a tu navegador para usar la cámara.<br><br>
+                            Por favor, verifica estos puntos y vuelve a intentarlo.
+                        </div>
+                    `;
+                    if (err.name === 'NotAllowedError') {
+                        errorMessage = `
+                            <div class="loading-message" style="color: red;">
+                                Acceso a la cámara denegado: <strong>${err.name || err.message}</strong>.<br><br>
+                                Por favor, concede permiso a tu navegador para usar la cámara. Puedes revisar la configuración de permisos de tu navegador para este sitio.
+                            </div>
+                        `;
+                    } else if (err.name === 'NotFoundError') {
+                         errorMessage = `
+                            <div class="loading-message" style="color: red;">
+                                Cámara no encontrada: <strong>${err.name || err.message}</strong>.<br><br>
+                                Asegúrate de que tu dispositivo tenga una cámara conectada y habilitada, y que no esté siendo utilizada por otra aplicación en este momento.
+                            </div>
+                        `;
+                    }
+                    scannerContainer.innerHTML = errorMessage;
+                    return;
+                }
             }
 
             Quagga.init({
                 inputStream: {
                     name: "Live",
                     type: "LiveStream",
-                    target: scannerContainer, // Or '#scanner-container'
-                    constraints: {
-                        facingMode: "environment" // Use rear camera if available
-                    },
+                    target: scannerContainer,
+                    constraints: constraints, // Use the determined constraints
                 },
                 decoder: {
-                    readers: ["ean_reader", "code_128_reader", "code_39_reader", "upc_reader", "ean_8_reader", "codabar_reader"] // Specify barcode types
+                    readers: ["ean_reader", "code_128_reader", "code_39_reader", "upc_reader", "ean_8_reader", "codabar_reader"]
                 }
             }, function(err) {
                 if (err) {
-                    console.error('Error al iniciar Quagga:', err);
+                    console.error('Error al iniciar Quagga.init:', err);
                     scannerContainer.innerHTML = `
                         <div class="loading-message" style="color: red;">
-                            Error al iniciar la cámara: ${err.message || err}.<br>
-                            Asegúrate de:<br>
-                            1. Conceder permisos de cámara al navegador.<br>
-                            2. Estar usando un servidor web seguro (HTTPS) o localhost.
+                            Error al inicializar el escáner: ${err.message || err}.<br>
+                            Por favor, verifica la consola para más detalles.
                         </div>
                     `;
                     return;
@@ -534,12 +580,39 @@
 
             Quagga.onDetected(function(result) {
                 const code = result.codeResult.code;
+                console.log('Código de barras detectado:', code);
                 searchInput.value = code; // Set the scanned code to the search input
                 barcodeScannerModal.style.display = 'none'; // Hide the modal
                 stopBarcodeScanner(); // Stop the scanner
                 // Trigger input event manually to update search results
                 const event = new Event('input', { bubbles: true });
                 searchInput.dispatchEvent(event);
+            });
+
+            Quagga.onProcessed(function(result) {
+                // This event fires constantly as frames are processed
+                // console.log('Procesando frame...'); // Uncomment for very verbose logging
+                const drawingCtx = Quagga.canvas.ctx.overlay;
+                const drawingCanvas = Quagga.canvas.dom.overlay;
+
+                if (result) {
+                    if (result.boxes) {
+                        drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.width), parseInt(drawingCanvas.height));
+                        result.boxes.filter(function (box) {
+                            return box !== result.box;
+                        }).forEach(function (box) {
+                            Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
+                        });
+                    }
+
+                    if (result.box) {
+                        Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "#00F", lineWidth: 2});
+                    }
+
+                    if (result.codeResult && result.codeResult.code) {
+                        Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {color: "red", lineWidth: 3});
+                    }
+                }
             });
         }
 
@@ -548,6 +621,7 @@
             if (quaggaInitialized) {
                 Quagga.stop();
                 console.log("QuaggaJS detenido.");
+                quaggaInitialized = false; // Reset flag
             }
         }
 
