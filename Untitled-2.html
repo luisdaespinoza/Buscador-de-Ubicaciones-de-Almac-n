@@ -58,12 +58,35 @@
             font-size: 1em;
             box-sizing: border-box;
             transition: border-color 0.3s ease;
+            padding-right: 40px; /* Space for clear button */
         }
 
         #searchInput:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2);
+        }
+
+        .clear-search-button {
+            position: absolute;
+            right: 55px; /* Adjust based on scanner button width */
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            color: #999;
+            cursor: pointer;
+            padding: 5px;
+            display: none; /* Hidden by default */
+        }
+
+        .clear-search-button.visible {
+            display: block;
+        }
+
+        .clear-search-button:hover {
+            color: #333;
         }
 
         .scanner-button {
@@ -227,6 +250,7 @@
             margin-top: 15px;
             position: relative;
             overflow: hidden; /* Ensure video doesn't overflow */
+            border-radius: 8px; /* Rounded corners for scanner area */
         }
 
         /* Style for the video element (ZXing-JS will attach to it) */
@@ -249,7 +273,45 @@
             background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
             padding: 10px;
             border-radius: 5px;
+            width: 80%; /* Adjust width for readability */
+            box-sizing: border-box;
         }
+
+        /* Scan Indicator */
+        .scan-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(0, 255, 0, 0.5); /* Green border */
+            box-sizing: border-box;
+            z-index: 5; /* Above video, below loading message */
+            overflow: hidden;
+            display: none; /* Hidden by default */
+        }
+
+        .scan-indicator.active {
+            display: block;
+        }
+
+        .scan-indicator::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px; /* Line thickness */
+            background: linear-gradient(to right, transparent, limegreen, transparent);
+            animation: scan-line 2s infinite ease-in-out;
+        }
+
+        @keyframes scan-line {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+
 
         /* Responsive adjustments */
         @media (max-width: 480px) {
@@ -265,6 +327,10 @@
             .search-container {
                 flex-direction: column; /* Stack input and button on small screens */
                 gap: 15px;
+            }
+            .clear-search-button {
+                right: 10px; /* Adjust for stacked layout */
+                top: calc(50% - 25px); /* Position relative to input */
             }
 
             .result-item {
@@ -290,6 +356,9 @@
         <h1>Buscador de Ubicaciones de Almacén</h1>
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="Escribe la unidad, ubicación, material o texto (ej: 1101-01, 378, A101...)">
+            <button id="clearSearchButton" class="clear-search-button" title="Limpiar búsqueda">
+                &times;
+            </button>
             <button id="scanBarcodeButton" class="scanner-button">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-barcode"><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></svg>
                 Escanear
@@ -313,6 +382,7 @@
             <div id="scanner-container">
                 <!-- Video element for camera feed - ZXing-JS will attach to this -->
                 <video id="scanner-video" autoplay playsinline></video>
+                <div id="scan-indicator" class="scan-indicator"></div> <!-- New scan indicator -->
                 <div id="scanner-loading-message" class="loading-message">Cargando cámara...</div>
             </div>
             <p>Asegúrate de que el código de barras esté bien iluminado y centrado en el recuadro.</p>
@@ -333,7 +403,8 @@
         const nextPageButton = document.getElementById('nextPage');
         const pageInfoSpan = document.getElementById('pageInfo');
         const paginationControlsDiv = document.querySelector('.pagination-controls'); // Reference to pagination container
-        const scanBarcodeButton = document.getElementById('scanBarcodeButton'); // New: Scan barcode button
+        const scanBarcodeButton = document.getElementById('scanBarcodeButton'); // Scan barcode button
+        const clearSearchButton = document.getElementById('clearSearchButton'); // New: Clear search button
 
         // Modal elements
         const barcodeScannerModal = document.getElementById('barcodeScannerModal');
@@ -341,6 +412,7 @@
         const scannerContainer = document.getElementById('scanner-container');
         const scannerVideo = document.getElementById('scanner-video'); // Reference to the video element
         const scannerLoadingMessage = document.getElementById('scanner-loading-message'); // Reference to the loading message
+        const scanIndicator = document.getElementById('scan-indicator'); // New: Scan indicator element
 
         let codeReader = null; // ZXing-JS code reader instance
 
@@ -432,6 +504,13 @@
         // Event listener for the search input field
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
+            // Show/hide clear button based on input content
+            if (searchTerm.length > 0) {
+                clearSearchButton.classList.add('visible');
+            } else {
+                clearSearchButton.classList.remove('visible');
+            }
+
             // Refilter all data based on the new search term
             currentFilteredData = storageData.filter(item =>
                 item.location.toLowerCase().includes(searchTerm) ||
@@ -441,6 +520,13 @@
             );
             currentPage = 1; // Reset to the first page for a new search
             displayPaginatedResults(); // Display results for the new search
+        });
+
+        // Event listener for the clear search button
+        clearSearchButton.addEventListener('click', () => {
+            searchInput.value = ''; // Clear the input
+            const event = new Event('input', { bubbles: true }); // Trigger input event
+            searchInput.dispatchEvent(event);
         });
 
         // Event listeners for pagination buttons
@@ -484,6 +570,7 @@
             console.log('Intentando iniciar escáner de código de barras con ZXing-JS...');
             scannerLoadingMessage.textContent = 'Cargando cámara...';
             scannerLoadingMessage.style.display = 'block'; // Show loading message
+            scanIndicator.classList.remove('active'); // Hide indicator initially
 
             // Check if camera API is supported
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -519,88 +606,92 @@
             }
 
             try {
-                // Get all video input devices
-                const videoInputDevices = await codeReader.listVideoInputDevices(); // Use codeReader instance method
-                console.log('Dispositivos de video encontrados:', videoInputDevices);
-
-                let deviceIdToUse = null;
-
-                if (videoInputDevices.length === 0) {
-                    throw new Error('No se encontraron dispositivos de video.');
-                }
-
-                // Prioritize rear camera
-                const rearCamera = videoInputDevices.find(device => 
-                    device.label.toLowerCase().includes('back') || 
-                    device.label.toLowerCase().includes('environment') ||
-                    device.kind === 'videoinput' && device.label.toLowerCase().includes('cámara trasera') // Common Spanish label
-                );
-
-                if (rearCamera) {
-                    deviceIdToUse = rearCamera.deviceId;
-                    console.log('Cámara trasera seleccionada por ID:', rearCamera.label);
-                } else {
-                    // Fallback to the first available device if no rear camera is explicitly found
-                    deviceIdToUse = videoInputDevices[0].deviceId;
-                    console.log('Usando la primera cámara disponible por ID:', videoInputDevices[0].label);
-                }
-
-                // Start decoding from the selected video device
-                codeReader.decodeFromVideoDevice(deviceIdToUse, 'scanner-video', (result, err) => {
+                // Try to get media stream with facingMode: 'environment' first
+                // This is the most common and preferred way for rear camera
+                await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                console.log('Cámara con facingMode: "environment" disponible.');
+                
+                // If successful, start decoding with this constraint
+                codeReader.decodeFromConstraints({ video: { facingMode: 'environment' } }, 'scanner-video', (result, err) => {
                     if (result) {
                         console.log('Código de barras detectado:', result.getText());
                         searchInput.value = result.getText(); // Set the scanned code to the search input
                         barcodeScannerModal.style.display = 'none'; // Hide the modal
                         stopBarcodeScanner(); // Stop the scanner
-                        // Trigger input event manually to update search results
-                        const event = new Event('input', { bubbles: true });
+                        const event = new Event('input', { bubbles: true }); // Trigger input event
                         searchInput.dispatchEvent(event);
                     }
                     if (err && !(err instanceof ZXing.NotFoundException)) {
-                        // Log other errors, but ignore NotFoundException which means no barcode found yet
                         console.error('Error de escaneo ZXing-JS:', err);
-                        // Optionally display error to user, but NotFoundException is normal
                     }
                 });
 
-                scannerLoadingMessage.style.display = 'none'; // Hide loading message once camera starts
+                scannerLoadingMessage.style.display = 'none'; // Hide loading message
+                scanIndicator.classList.add('active'); // Show scan indicator
                 console.log('ZXing-JS iniciado y esperando códigos de barras.');
 
             } catch (err) {
-                console.error('Error al iniciar ZXing-JS:', err);
-                let errorMessage = `
-                    <div style="color: red;">
-                        Error al inicializar el escáner: <strong>${err.name || err.message}</strong>.<br><br>
-                        Esto puede deberse a:<br>
-                        1.  <strong>No hay cámara disponible:</strong> Tu dispositivo no tiene cámara o está deshabilitada.<br>
-                        2.  <strong>Cámara en uso:</strong> Otra aplicación (ej. Zoom, otra pestaña del navegador) la está utilizando.<br>
-                        3.  <strong>Permisos:</strong> No has concedido permiso a tu navegador para usar la cámara.<br><br>
-                        Por favor, verifica estos puntos y vuelve a intentarlo.
-                    </div>
-                `;
-                if (err.name === 'NotAllowedError') {
-                    errorMessage = `
+                console.warn('No se pudo usar facingMode: "environment". Intentando con restricción genérica (video: true).', err);
+                // If 'environment' fails, try with generic 'video: true'
+                try {
+                    await navigator.mediaDevices.getUserMedia({ video: true });
+                    console.log('Cámara con restricción genérica (video: true) disponible.');
+
+                    codeReader.decodeFromConstraints({ video: true }, 'scanner-video', (result, err) => {
+                        if (result) {
+                            console.log('Código de barras detectado:', result.getText());
+                            searchInput.value = result.getText(); // Set the scanned code to the search input
+                            barcodeScannerModal.style.display = 'none'; // Hide the modal
+                            stopBarcodeScanner(); // Stop the scanner
+                            const event = new Event('input', { bubbles: true }); // Trigger input event
+                            searchInput.dispatchEvent(event);
+                        }
+                        if (err && !(err instanceof ZXing.NotFoundException)) {
+                            console.error('Error de escaneo ZXing-JS:', err);
+                        }
+                    });
+
+                    scannerLoadingMessage.style.display = 'none'; // Hide loading message
+                    scanIndicator.classList.add('active'); // Show scan indicator
+                    console.log('ZXing-JS iniciado y esperando códigos de barras.');
+
+                } catch (finalErr) {
+                    console.error('Error final al iniciar ZXing-JS con cualquier restricción de cámara:', finalErr);
+                    let errorMessage = `
                         <div style="color: red;">
-                            Acceso a la cámara denegado: <strong>${err.name || err.message}</strong>.<br><br>
-                            Por favor, concede permiso a tu navegador para usar la cámara. Puedes revisar la configuración de permisos de tu navegador para este sitio.
+                            Error al inicializar el escáner: <strong>${finalErr.name || finalErr.message}</strong>.<br><br>
+                            Esto puede deberse a:<br>
+                            1.  <strong>No hay cámara disponible:</strong> Tu dispositivo no tiene cámara o está deshabilitada.<br>
+                            2.  <strong>Cámara en uso:</strong> Otra aplicación (ej. Zoom, otra pestaña del navegador) la está utilizando.<br>
+                            3.  <strong>Permisos:</strong> No has concedido permiso a tu navegador para usar la cámara.<br><br>
+                            Por favor, verifica estos puntos y vuelve a intentarlo.
                         </div>
                     `;
-                } else if (err.name === 'NotFoundError') {
-                     errorMessage = `
-                        <div style="color: red;">
-                            Cámara no encontrada: <strong>${err.name || err.message}</strong>.<br><br>
-                            Asegúrate de que tu dispositivo tenga una cámara conectada y habilitada, y que no esté siendo utilizada por otra aplicación en este momento.
-                        </div>
-                    `;
-                } else if (err.name === 'NotReadableError') {
-                     errorMessage = `
-                        <div style="color: red;">
-                            Cámara no legible: <strong>${err.name || err.message}</strong>.<br><br>
-                            La cámara está siendo utilizada por otra aplicación o no está disponible. Por favor, cierra otras aplicaciones que usen la cámara.
-                        </div>
-                    `;
+                    if (finalErr.name === 'NotAllowedError') {
+                        errorMessage = `
+                            <div style="color: red;">
+                                Acceso a la cámara denegado: <strong>${finalErr.name || finalErr.message}</strong>.<br><br>
+                                Por favor, concede permiso a tu navegador para usar la cámara. Puedes revisar la configuración de permisos de tu navegador para este sitio.
+                            </div>
+                        `;
+                    } else if (finalErr.name === 'NotFoundError') {
+                         errorMessage = `
+                            <div style="color: red;">
+                                Cámara no encontrada: <strong>${finalErr.name || finalErr.message}</strong>.<br><br>
+                                Asegúrate de que tu dispositivo tenga una cámara conectada y habilitada, y que no esté siendo utilizada por otra aplicación en este momento.
+                            </div>
+                        `;
+                    } else if (finalErr.name === 'NotReadableError') {
+                         errorMessage = `
+                            <div style="color: red;">
+                                Cámara no legible: <strong>${finalErr.name || finalErr.message}</strong>.<br><br>
+                                La cámara está siendo utilizada por otra aplicación o no está disponible. Por favor, cierra otras aplicaciones que usen la cámara.
+                            </div>
+                        `;
+                    }
+                    scannerLoadingMessage.innerHTML = errorMessage;
+                    scannerLoadingMessage.style.display = 'block'; // Ensure error message is visible
                 }
-                scannerLoadingMessage.innerHTML = errorMessage;
             }
         }
 
@@ -609,6 +700,7 @@
             if (codeReader) {
                 console.log("Deteniendo ZXing-JS escáner...");
                 codeReader.reset(); // Stops the camera and resets the reader
+                scanIndicator.classList.remove('active'); // Hide scan indicator
             }
         }
 
