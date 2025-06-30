@@ -229,20 +229,12 @@
             overflow: hidden; /* Ensure video doesn't overflow */
         }
 
-        /* Style for the video element (QuaggaJS will create it) */
-        #scanner-container video { 
+        /* Style for the video element (ZXing-JS will attach to it) */
+        #scanner-video { 
             width: 100%;
             height: 100%;
             object-fit: contain; 
             display: block; 
-        }
-
-        #scanner-container canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
         }
 
         .loading-message {
@@ -319,16 +311,20 @@
             <span class="close-button">&times;</span>
             <h2>Escáner de Código de Barras</h2>
             <div id="scanner-container">
-                <!-- QuaggaJS will inject the video element here -->
+                <!-- Video element for camera feed - ZXing-JS will attach to this -->
+                <video id="scanner-video" autoplay playsinline></video>
                 <div id="scanner-loading-message" class="loading-message">Cargando cámara...</div>
             </div>
             <p>Asegúrate de que el código de barras esté bien iluminado y centrado en el recuadro.</p>
         </div>
     </div>
 
-    <!-- Updated QuaggaJS CDN link -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.8.0/quagga.min.js"></script>
+    <!-- ZXing-JS CDN link -->
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <script>
+        // Import necessary classes from ZXing-JS
+        const { BrowserMultiFormatReader, DecodeHintType } = ZXing;
+
         let storageData = []; // Variable to store all loaded data
         let currentPage = 1;
         const recordsPerPage = 100; // Number of items to display per page
@@ -346,10 +342,10 @@
         const barcodeScannerModal = document.getElementById('barcodeScannerModal');
         const closeButton = document.querySelector('.close-button');
         const scannerContainer = document.getElementById('scanner-container');
-        // Removed scannerVideo reference as QuaggaJS will create it
+        const scannerVideo = document.getElementById('scanner-video'); // Reference to the video element
         const scannerLoadingMessage = document.getElementById('scanner-loading-message'); // Reference to the loading message
 
-        let quaggaInitialized = false; // Flag to track QuaggaJS initialization
+        let codeReader = null; // ZXing-JS code reader instance
 
         // Function to update pagination controls (buttons and text)
         function updatePaginationControls(totalResults) {
@@ -410,7 +406,7 @@
 
                 // Process the text to convert it into an array of objects format
                 storageData = textData.trim().split('\n').filter(line => line.includes('\t')).map(line => {
-                    const parts = line.split('\t');
+                    const parts = line = line.split('\t');
                     // Ensure each part exists before trimming
                     const locationPart = parts[0] ? parts[0].trim() : 'Sin Ubicación';
                     const materialPart = parts[1] ? parts[1].trim() : 'Sin Material';
@@ -466,19 +462,19 @@
             }
         });
 
-        // New: Event listener for the barcode scan button
+        // Event listener for the barcode scan button
         scanBarcodeButton.addEventListener('click', () => {
             barcodeScannerModal.style.display = 'flex'; // Show the modal
             startBarcodeScanner();
         });
 
-        // New: Event listener for the modal close button
+        // Event listener for the modal close button
         closeButton.addEventListener('click', () => {
             barcodeScannerModal.style.display = 'none'; // Hide the modal
             stopBarcodeScanner();
         });
 
-        // New: Close modal if clicking outside the content
+        // Close modal if clicking outside the content
         window.addEventListener('click', (event) => {
             if (event.target === barcodeScannerModal) {
                 barcodeScannerModal.style.display = 'none';
@@ -486,9 +482,9 @@
             }
         });
 
-        // New: Function to start the barcode scanner
-        function startBarcodeScanner() {
-            console.log('Intentando iniciar escáner de código de barras...');
+        // Function to start the barcode scanner using ZXing-JS
+        async function startBarcodeScanner() {
+            console.log('Intentando iniciar escáner de código de barras con ZXing-JS...');
             scannerLoadingMessage.textContent = 'Cargando cámara...';
             scannerLoadingMessage.style.display = 'block'; // Show loading message
 
@@ -499,126 +495,105 @@
                 return;
             }
 
-            // IMPORTANT: Check if Quagga is defined before trying to use it
-            if (typeof Quagga === 'undefined') {
-                scannerLoadingMessage.innerHTML = `
+            // Initialize ZXing-JS reader
+            if (!codeReader) {
+                const hints = new Map();
+                // Specify the barcode formats you want to read
+                hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+                    ZXing.BarcodeFormat.EAN_13,
+                    ZXing.BarcodeFormat.CODE_128,
+                    ZXing.BarcodeFormat.CODE_39,
+                    ZXing.BarcodeFormat.UPC_A,
+                    ZXing.BarcodeFormat.EAN_8,
+                    ZXing.BarcodeFormat.CODABAR
+                ]);
+                codeReader = new BrowserMultiFormatReader(hints);
+            }
+
+            try {
+                // Get video input devices to try and select the rear camera
+                const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
+                let selectedDeviceId = null;
+
+                // Try to find an 'environment' (rear) camera
+                const rearCamera = videoInputDevices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('environment'));
+                if (rearCamera) {
+                    selectedDeviceId = rearCamera.deviceId;
+                    console.log('Cámara trasera encontrada:', rearCamera.label);
+                } else if (videoInputDevices.length > 0) {
+                    // Fallback to the first available camera if no rear camera is explicitly found
+                    selectedDeviceId = videoInputDevices[0].deviceId;
+                    console.log('Usando la primera cámara disponible:', videoInputDevices[0].label);
+                } else {
+                    throw new Error('No se encontraron dispositivos de video.');
+                }
+
+                // Start decoding from the selected video device
+                codeReader.decodeFromVideoDevice(selectedDeviceId, 'scanner-video', (result, err) => {
+                    if (result) {
+                        console.log('Código de barras detectado:', result.getText());
+                        searchInput.value = result.getText(); // Set the scanned code to the search input
+                        barcodeScannerModal.style.display = 'none'; // Hide the modal
+                        stopBarcodeScanner(); // Stop the scanner
+                        // Trigger input event manually to update search results
+                        const event = new Event('input', { bubbles: true });
+                        searchInput.dispatchEvent(event);
+                    }
+                    if (err && !(err instanceof ZXing.NotFoundException)) {
+                        // Log other errors, but ignore NotFoundException which means no barcode found yet
+                        console.error('Error de escaneo ZXing-JS:', err);
+                        // You might want to show this error to the user if it's persistent
+                        // scannerLoadingMessage.innerHTML = `<div style="color: red;">Error de escaneo: ${err.message}.</div>`;
+                        // scannerLoadingMessage.style.display = 'block';
+                    }
+                });
+
+                scannerLoadingMessage.style.display = 'none'; // Hide loading message once camera starts
+                console.log('ZXing-JS iniciado y esperando códigos de barras.');
+
+            } catch (err) {
+                console.error('Error al iniciar ZXing-JS:', err);
+                let errorMessage = `
                     <div style="color: red;">
-                        Error: La librería QuaggaJS no se ha cargado correctamente.<br>
-                        Por favor, verifica tu conexión a internet y la consola del navegador (pestaña 'Network') para ver si el archivo 'quagga.min.js' se descargó sin errores.
+                        Error al inicializar el escáner: <strong>${err.name || err.message}</strong>.<br><br>
+                        Esto puede deberse a:<br>
+                        1.  <strong>No hay cámara disponible:</strong> Tu dispositivo no tiene cámara o está deshabilitada.<br>
+                        2.  <strong>Cámara en uso:</strong> Otra aplicación (ej. Zoom, otra pestaña del navegador) la está utilizando.<br>
+                        3.  <strong>Permisos:</strong> No has concedido permiso a tu navegador para usar la cámara.<br><br>
+                        Por favor, verifica estos puntos y vuelve a intentarlo.
                     </div>
                 `;
-                console.error('Error: QuaggaJS no está definido. La librería no se cargó.');
-                return;
-            }
-
-            if (quaggaInitialized) {
-                console.log('Quagga ya inicializado, reiniciando...');
-                Quagga.start();
-                scannerLoadingMessage.style.display = 'none'; // Hide loading message if already initialized
-                return;
-            }
-
-            // Initialize QuaggaJS, targeting the container div
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: scannerContainer, // Target the container div
-                    constraints: {
-                        facingMode: "environment" // Try rear camera first
-                    },
-                },
-                decoder: {
-                    readers: ["ean_reader", "code_128_reader", "code_39_reader", "upc_reader", "ean_8_reader", "codabar_reader"]
-                }
-            }, function(err) {
-                if (err) {
-                    console.error('Error al iniciar Quagga.init:', err);
-                    let errorMessage = `
+                if (err.name === 'NotAllowedError') {
+                    errorMessage = `
                         <div style="color: red;">
-                            Error al inicializar el escáner: <strong>${err.name || err.message}</strong>.<br><br>
-                            Esto puede deberse a:<br>
-                            1.  <strong>No hay cámara disponible:</strong> Tu dispositivo no tiene cámara o está deshabilitada.<br>
-                            2.  <strong>Cámara en uso:</strong> Otra aplicación (ej. Zoom, otra pestaña del navegador) la está utilizando.<br>
-                            3.  <strong>Permisos:</strong> No has concedido permiso a tu navegador para usar la cámara.<br><br>
-                            Por favor, verifica estos puntos y vuelve a intentarlo.
+                            Acceso a la cámara denegado: <strong>${err.name || err.message}</strong>.<br><br>
+                            Por favor, concede permiso a tu navegador para usar la cámara. Puedes revisar la configuración de permisos de tu navegador para este sitio.
                         </div>
                     `;
-                    if (err.name === 'NotAllowedError') {
-                        errorMessage = `
-                            <div style="color: red;">
-                                Acceso a la cámara denegado: <strong>${err.name || err.message}</strong>.<br><br>
-                                Por favor, concede permiso a tu navegador para usar la cámara. Puedes revisar la configuración de permisos de tu navegador para este sitio.
-                            </div>
-                        `;
-                    } else if (err.name === 'NotFoundError') {
-                         errorMessage = `
-                            <div style="color: red;">
-                                Cámara no encontrada: <strong>${err.name || err.message}</strong>.<br><br>
-                                Asegúrate de que tu dispositivo tenga una cámara conectada y habilitada, y que no esté siendo utilizada por otra aplicación en este momento.
-                            </div>
-                        `;
-                    } else if (err.name === 'NotReadableError') {
-                         errorMessage = `
-                            <div style="color: red;">
-                                Cámara no legible: <strong>${err.name || err.message}</strong>.<br><br>
-                                La cámara está siendo utilizada por otra aplicación o no está disponible. Por favor, cierra otras aplicaciones que usen la cámara.
-                            </div>
-                        `;
-                    }
-                    scannerLoadingMessage.innerHTML = errorMessage;
-                    return;
+                } else if (err.name === 'NotFoundError') {
+                     errorMessage = `
+                        <div style="color: red;">
+                            Cámara no encontrada: <strong>${err.name || err.message}</strong>.<br><br>
+                            Asegúrate de que tu dispositivo tenga una cámara conectada y habilitada, y que no esté siendo utilizada por otra aplicación en este momento.
+                        </div>
+                    `;
+                } else if (err.name === 'NotReadableError') {
+                     errorMessage = `
+                        <div style="color: red;">
+                            Cámara no legible: <strong>${err.name || err.message}</strong>.<br><br>
+                            La cámara está siendo utilizada por otra aplicación o no está disponible. Por favor, cierra otras aplicaciones que usen la cámara.
+                        </div>
+                    `;
                 }
-                console.log("QuaggaJS inicializado. Iniciando escaneo...");
-                quaggaInitialized = true;
-                scannerLoadingMessage.style.display = 'none'; // Hide loading message once camera starts
-                Quagga.start();
-            });
-
-            Quagga.onDetected(function(result) {
-                const code = result.codeResult.code;
-                console.log('Código de barras detectado:', code);
-                searchInput.value = code; // Set the scanned code to the search input
-                barcodeScannerModal.style.display = 'none'; // Hide the modal
-                stopBarcodeScanner(); // Stop the scanner
-                // Trigger input event manually to update search results
-                const event = new Event('input', { bubbles: true });
-                searchInput.dispatchEvent(event);
-            });
-
-            Quagga.onProcessed(function(result) {
-                // This event fires constantly as frames are processed
-                // console.log('Procesando frame...'); // Uncomment for very verbose logging
-                const drawingCtx = Quagga.canvas.ctx.overlay;
-                const drawingCanvas = Quagga.canvas.dom.overlay;
-
-                if (result) {
-                    if (result.boxes) {
-                        drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.width), parseInt(drawingCanvas.height));
-                        result.boxes.filter(function (box) {
-                            return box !== result.box;
-                        }).forEach(function (box) {
-                            Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
-                        });
-                    }
-
-                    if (result.box) {
-                        Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "#00F", lineWidth: 2});
-                    }
-
-                    if (result.codeResult && result.codeResult.code) {
-                        Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {color: "red", lineWidth: 3});
-                    }
-                }
-            });
+                scannerLoadingMessage.innerHTML = errorMessage;
+            }
         }
 
-        // New: Function to stop the barcode scanner
+        // Function to stop the barcode scanner using ZXing-JS
         function stopBarcodeScanner() {
-            if (quaggaInitialized) {
-                Quagga.stop();
-                console.log("QuaggaJS detenido.");
-                quaggaInitialized = false; // Reset flag
+            if (codeReader) {
+                console.log("Deteniendo ZXing-JS escáner...");
+                codeReader.reset(); // Stops the camera and resets the reader
             }
         }
 
