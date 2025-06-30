@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Cámara Simple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border: 2px solid #333;
+            background-color: #000;
+            display: block;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #message {
+            margin-top: 15px;
+            font-size: 1em;
+            color: #d32f2f;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Cámara</h1>
+    <video id="cameraFeed" autoplay playsinline></video>
+    <button id="startCameraButton">Iniciar Cámara</button>
+    <div id="message"></div>
+
+    <script>
+        const video = document.getElementById('cameraFeed');
+        const startButton = document.getElementById('startCameraButton');
+        const messageDiv = document.getElementById('message');
+        let stream = null;
+
+        startButton.addEventListener('click', async () => {
+            messageDiv.textContent = 'Intentando iniciar cámara...';
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                stream = null;
+            }
+
+            try {
+                // Try with environment camera first (rear camera)
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = stream;
+                messageDiv.textContent = 'Cámara iniciada correctamente (trasera).';
+                console.log('Cámara iniciada con facingMode: environment');
+            } catch (err) {
+                console.warn('No se pudo usar facingMode: "environment". Intentando sin facingMode específico.', err);
+                try {
+                    // If environment fails, try without specific facingMode (browser chooses default)
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = stream;
+                    messageDiv.textContent = 'Cámara iniciada correctamente (predeterminada).';
+                    console.log('Cámara iniciada sin facingMode específico');
+                } catch (error) {
+                    console.error('Error al acceder a la cámara:', error);
+                    let displayMessage = `Error al acceder a la cámara: <strong>${error.name || error.message}</strong>.<br><br>`;
+
+                    if (error.name === 'NotAllowedError') {
+                        displayMessage += 'Has denegado el permiso de la cámara. Por favor, revisa la configuración de permisos de tu navegador para este sitio.';
+                    } else if (error.name === 'NotFoundError') {
+                        displayMessage += 'No se encontró ninguna cámara. Asegúrate de que tu dispositivo tenga una cámara y que no esté siendo usada por otra aplicación.';
+                    } else if (error.name === 'NotReadableError') {
+                        displayMessage += 'La cámara está siendo utilizada por otra aplicación o no está disponible. Por favor, cierra otras aplicaciones que usen la cámara.';
+                    } else if (error.name === 'OverconstrainedError') {
+                        displayMessage += 'Las restricciones de la cámara no se pudieron cumplir. Intenta actualizar tu navegador.';
+                    } else {
+                        displayMessage += 'Ocurrió un error inesperado al iniciar la cámara.';
+                    }
+                    messageDiv.innerHTML = displayMessage;
+                }
+            }
+        });
+
+        // Stop camera when leaving the page or closing the tab
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>
