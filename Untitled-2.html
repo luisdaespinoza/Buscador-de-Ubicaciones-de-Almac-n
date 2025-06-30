@@ -229,12 +229,12 @@
             overflow: hidden; /* Ensure video doesn't overflow */
         }
 
-        #scanner-video { /* Style for the video element itself */
+        /* Style for the video element (QuaggaJS will create it) */
+        #scanner-container video { 
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Changed from cover to contain */
-            /* Removed transform: scaleX(-1); */
-            display: block; /* Ensure it behaves like a block element */
+            object-fit: contain; 
+            display: block; 
         }
 
         #scanner-container canvas {
@@ -319,8 +319,7 @@
             <span class="close-button">&times;</span>
             <h2>Escáner de Código de Barras</h2>
             <div id="scanner-container">
-                <!-- Video element for camera feed -->
-                <video id="scanner-video" autoplay playsinline></video>
+                <!-- QuaggaJS will inject the video element here -->
                 <div id="scanner-loading-message" class="loading-message">Cargando cámara...</div>
             </div>
             <p>Asegúrate de que el código de barras esté bien iluminado y centrado en el recuadro.</p>
@@ -347,7 +346,7 @@
         const barcodeScannerModal = document.getElementById('barcodeScannerModal');
         const closeButton = document.querySelector('.close-button');
         const scannerContainer = document.getElementById('scanner-container');
-        const scannerVideo = document.getElementById('scanner-video'); // Reference to the video element
+        // Removed scannerVideo reference as QuaggaJS will create it
         const scannerLoadingMessage = document.getElementById('scanner-loading-message'); // Reference to the loading message
 
         let quaggaInitialized = false; // Flag to track QuaggaJS initialization
@@ -519,20 +518,12 @@
                 return;
             }
 
-            // Log video element state before init
-            console.log('Video element:', scannerVideo);
-            console.log('Video srcObject before Quagga.init:', scannerVideo.srcObject);
-            scannerVideo.onloadedmetadata = () => { console.log('Video metadata loaded. Video readyState:', scannerVideo.readyState); };
-            scannerVideo.onplay = () => { console.log('Video is playing!'); };
-            scannerVideo.onerror = (e) => { console.error('Video element error:', e); };
-
-
-            // Initialize QuaggaJS, targeting the video element
+            // Initialize QuaggaJS, targeting the container div
             Quagga.init({
                 inputStream: {
                     name: "Live",
                     type: "LiveStream",
-                    target: scannerVideo, // Target the <video> element directly
+                    target: scannerContainer, // Target the container div
                     constraints: {
                         facingMode: "environment" // Try rear camera first
                     },
@@ -582,15 +573,6 @@
                 quaggaInitialized = true;
                 scannerLoadingMessage.style.display = 'none'; // Hide loading message once camera starts
                 Quagga.start();
-
-                // Explicitly try to play the video after Quagga starts
-                if (scannerVideo.srcObject && scannerVideo.paused) {
-                    scannerVideo.play().catch(playError => {
-                        console.error('Error al intentar reproducir el video de la cámara:', playError);
-                        scannerLoadingMessage.innerHTML = `<div style="color: red;">Error al reproducir el video: ${playError.message}. Intenta recargar la página.</div>`;
-                        scannerLoadingMessage.style.display = 'block';
-                    });
-                }
             });
 
             Quagga.onDetected(function(result) {
