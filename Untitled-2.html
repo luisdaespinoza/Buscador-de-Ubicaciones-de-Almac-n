@@ -474,7 +474,7 @@
         });
 
         // New: Function to start the barcode scanner
-        async function startBarcodeScanner() {
+        function startBarcodeScanner() {
             console.log('Intentando iniciar escáner de código de barras...');
 
             // Check if camera API is supported
@@ -505,26 +505,25 @@
                 return;
             }
 
-            let constraints = {
-                facingMode: "environment" // Try rear camera first
-            };
-
-            try {
-                // Try to get media stream with environment facing mode
-                await navigator.mediaDevices.getUserMedia({ video: constraints });
-                console.log('Cámara con facingMode: "environment" disponible.');
-            } catch (error) {
-                console.warn('No se pudo usar facingMode: "environment". Intentando sin facingMode específico.', error);
-                // If environment facing mode fails, try without specific facingMode
-                constraints = {};
-                try {
-                    await navigator.mediaDevices.getUserMedia({ video: constraints });
-                    console.log('Cámara sin facingMode específico disponible.');
-                } catch (err) {
-                    console.error('Error al acceder a la cámara con cualquier facingMode:', err);
+            // Let QuaggaJS handle the camera access directly
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: scannerContainer,
+                    constraints: {
+                        facingMode: "environment" // Try rear camera first
+                    },
+                },
+                decoder: {
+                    readers: ["ean_reader", "code_128_reader", "code_39_reader", "upc_reader", "ean_8_reader", "codabar_reader"]
+                }
+            }, function(err) {
+                if (err) {
+                    console.error('Error al iniciar Quagga.init:', err);
                     let errorMessage = `
                         <div class="loading-message" style="color: red;">
-                            Error de acceso a la cámara: <strong>${err.name || err.message}</strong>.<br><br>
+                            Error al inicializar el escáner: <strong>${err.name || err.message}</strong>.<br><br>
                             Esto puede deberse a:<br>
                             1.  <strong>No hay cámara disponible:</strong> Tu dispositivo no tiene cámara o está deshabilitada.<br>
                             2.  <strong>Cámara en uso:</strong> Otra aplicación (ej. Zoom, otra pestaña del navegador) la está utilizando.<br>
@@ -546,31 +545,15 @@
                                 Asegúrate de que tu dispositivo tenga una cámara conectada y habilitada, y que no esté siendo utilizada por otra aplicación en este momento.
                             </div>
                         `;
+                    } else if (err.name === 'NotReadableError') {
+                         errorMessage = `
+                            <div class="loading-message" style="color: red;">
+                                Cámara no legible: <strong>${err.name || err.message}</strong>.<br><br>
+                                La cámara está siendo utilizada por otra aplicación o no está disponible. Por favor, cierra otras aplicaciones que usen la cámara.
+                            </div>
+                        `;
                     }
                     scannerContainer.innerHTML = errorMessage;
-                    return;
-                }
-            }
-
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: scannerContainer,
-                    constraints: constraints, // Use the determined constraints
-                },
-                decoder: {
-                    readers: ["ean_reader", "code_128_reader", "code_39_reader", "upc_reader", "ean_8_reader", "codabar_reader"]
-                }
-            }, function(err) {
-                if (err) {
-                    console.error('Error al iniciar Quagga.init:', err);
-                    scannerContainer.innerHTML = `
-                        <div class="loading-message" style="color: red;">
-                            Error al inicializar el escáner: ${err.message || err}.<br>
-                            Por favor, verifica la consola para más detalles.
-                        </div>
-                    `;
                     return;
                 }
                 console.log("QuaggaJS inicializado. Iniciando escaneo...");
