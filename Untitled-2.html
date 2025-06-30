@@ -226,13 +226,15 @@
             background-color: #333;
             margin-top: 15px;
             position: relative;
+            overflow: hidden; /* Ensure video doesn't overflow */
         }
 
-        #scanner-container video {
+        #scanner-video { /* Style for the video element itself */
             width: 100%;
             height: 100%;
             object-fit: cover; /* Cover the container */
             transform: scaleX(-1); /* Mirror the camera feed */
+            display: block; /* Ensure it behaves like a block element */
         }
 
         #scanner-container canvas {
@@ -247,6 +249,14 @@
             color: #fff;
             text-align: center;
             padding: 20px;
+            position: absolute; /* Position over the video */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10; /* Ensure it's above the video */
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+            padding: 10px;
+            border-radius: 5px;
         }
 
         /* Responsive adjustments */
@@ -309,7 +319,9 @@
             <span class="close-button">&times;</span>
             <h2>Escáner de Código de Barras</h2>
             <div id="scanner-container">
-                <div class="loading-message">Cargando cámara...</div>
+                <!-- Video element for camera feed -->
+                <video id="scanner-video" autoplay playsinline></video>
+                <div id="scanner-loading-message" class="loading-message">Cargando cámara...</div>
             </div>
             <p>Asegúrate de que el código de barras esté bien iluminado y centrado en el recuadro.</p>
         </div>
@@ -335,6 +347,8 @@
         const barcodeScannerModal = document.getElementById('barcodeScannerModal');
         const closeButton = document.querySelector('.close-button');
         const scannerContainer = document.getElementById('scanner-container');
+        const scannerVideo = document.getElementById('scanner-video'); // Reference to the video element
+        const scannerLoadingMessage = document.getElementById('scanner-loading-message'); // Reference to the loading message
 
         let quaggaInitialized = false; // Flag to track QuaggaJS initialization
 
@@ -476,21 +490,20 @@
         // New: Function to start the barcode scanner
         function startBarcodeScanner() {
             console.log('Intentando iniciar escáner de código de barras...');
+            scannerLoadingMessage.textContent = 'Cargando cámara...';
+            scannerLoadingMessage.style.display = 'block'; // Show loading message
 
             // Check if camera API is supported
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                scannerContainer.innerHTML = '<div class="loading-message" style="color: red;">Tu navegador no soporta la API de la cámara o no tiene permisos. Por favor, actualiza tu navegador o revisa la configuración de permisos.</div>';
+                scannerLoadingMessage.innerHTML = '<div style="color: red;">Tu navegador no soporta la API de la cámara o no tiene permisos. Por favor, actualiza tu navegador o revisa la configuración de permisos.</div>';
                 console.error('Error: navigator.mediaDevices.getUserMedia no está soportado en este navegador.');
                 return;
             }
 
-            // Clear previous content in the scanner container completely
-            scannerContainer.innerHTML = ''; 
-
             // IMPORTANT: Check if Quagga is defined before trying to use it
             if (typeof Quagga === 'undefined') {
-                scannerContainer.innerHTML = `
-                    <div class="loading-message" style="color: red;">
+                scannerLoadingMessage.innerHTML = `
+                    <div style="color: red;">
                         Error: La librería QuaggaJS no se ha cargado correctamente.<br>
                         Por favor, verifica tu conexión a internet y la consola del navegador (pestaña 'Network') para ver si el archivo 'quagga.min.js' se descargó sin errores.
                     </div>
@@ -502,15 +515,16 @@
             if (quaggaInitialized) {
                 console.log('Quagga ya inicializado, reiniciando...');
                 Quagga.start();
+                scannerLoadingMessage.style.display = 'none'; // Hide loading message if already initialized
                 return;
             }
 
-            // Let QuaggaJS handle the camera access directly
+            // Initialize QuaggaJS, targeting the video element
             Quagga.init({
                 inputStream: {
                     name: "Live",
                     type: "LiveStream",
-                    target: scannerContainer,
+                    target: scannerVideo, // Target the <video> element directly
                     constraints: {
                         facingMode: "environment" // Try rear camera first
                     },
@@ -522,7 +536,7 @@
                 if (err) {
                     console.error('Error al iniciar Quagga.init:', err);
                     let errorMessage = `
-                        <div class="loading-message" style="color: red;">
+                        <div style="color: red;">
                             Error al inicializar el escáner: <strong>${err.name || err.message}</strong>.<br><br>
                             Esto puede deberse a:<br>
                             1.  <strong>No hay cámara disponible:</strong> Tu dispositivo no tiene cámara o está deshabilitada.<br>
@@ -533,31 +547,32 @@
                     `;
                     if (err.name === 'NotAllowedError') {
                         errorMessage = `
-                            <div class="loading-message" style="color: red;">
+                            <div style="color: red;">
                                 Acceso a la cámara denegado: <strong>${err.name || err.message}</strong>.<br><br>
                                 Por favor, concede permiso a tu navegador para usar la cámara. Puedes revisar la configuración de permisos de tu navegador para este sitio.
                             </div>
                         `;
                     } else if (err.name === 'NotFoundError') {
                          errorMessage = `
-                            <div class="loading-message" style="color: red;">
+                            <div style="color: red;">
                                 Cámara no encontrada: <strong>${err.name || err.message}</strong>.<br><br>
                                 Asegúrate de que tu dispositivo tenga una cámara conectada y habilitada, y que no esté siendo utilizada por otra aplicación en este momento.
                             </div>
                         `;
                     } else if (err.name === 'NotReadableError') {
                          errorMessage = `
-                            <div class="loading-message" style="color: red;">
+                            <div style="color: red;">
                                 Cámara no legible: <strong>${err.name || err.message}</strong>.<br><br>
                                 La cámara está siendo utilizada por otra aplicación o no está disponible. Por favor, cierra otras aplicaciones que usen la cámara.
                             </div>
                         `;
                     }
-                    scannerContainer.innerHTML = errorMessage;
+                    scannerLoadingMessage.innerHTML = errorMessage;
                     return;
                 }
                 console.log("QuaggaJS inicializado. Iniciando escaneo...");
                 quaggaInitialized = true;
+                scannerLoadingMessage.style.display = 'none'; // Hide loading message once camera starts
                 Quagga.start();
             });
 
