@@ -322,9 +322,6 @@
     <!-- ZXing-JS CDN link -->
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js"></script>
     <script>
-        // No longer destructuring globally
-        // const { BrowserMultiFormatReader, DecodeHintType } = ZXing;
-
         let storageData = []; // Variable to store all loaded data
         let currentPage = 1;
         const recordsPerPage = 100; // Number of items to display per page
@@ -507,10 +504,9 @@
                 return;
             }
 
-            // Initialize ZXing-JS reader
+            // Initialize ZXing-JS reader if not already
             if (!codeReader) {
                 const hints = new Map();
-                // Specify the barcode formats you want to read
                 hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
                     ZXing.BarcodeFormat.EAN_13,
                     ZXing.BarcodeFormat.CODE_128,
@@ -523,33 +519,34 @@
             }
 
             try {
-                let constraints = {}; // Default empty constraints
-
-                // Log the type of the method before calling it
-                console.log('Tipo de ZXing.BrowserMultiFormatReader.listVideoInputDevices:', typeof ZXing.BrowserMultiFormatReader.listVideoInputDevices);
-
-                const videoInputDevices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+                // Get all video input devices
+                const videoInputDevices = await codeReader.listVideoInputDevices(); // Use codeReader instance method
                 console.log('Dispositivos de video encontrados:', videoInputDevices);
 
-                if (videoInputDevices.length > 0) {
-                    const rearCamera = videoInputDevices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('environment'));
-                    if (rearCamera) {
-                        constraints = { deviceId: { exact: rearCamera.deviceId } };
-                        console.log('Cámara trasera seleccionada por ID:', rearCamera.label);
-                    } else {
-                        // Fallback to the first device if no explicit rear camera found
-                        constraints = { deviceId: { exact: videoInputDevices[0].deviceId } };
-                        console.log('Usando la primera cámara disponible por ID:', videoInputDevices[0].label);
-                    }
-                } else {
-                    // If no devices are listed, try a generic constraint as a last resort
-                    console.warn('No se encontraron dispositivos de video por listVideoInputDevices. Intentando con una restricción genérica (video: true).');
-                    constraints = { video: true }; // Let browser pick default camera
+                let deviceIdToUse = null;
+
+                if (videoInputDevices.length === 0) {
+                    throw new Error('No se encontraron dispositivos de video.');
                 }
 
-                // Start decoding from the selected video device or generic constraints
-                // The target is the video element itself
-                codeReader.decodeFromConstraints(constraints, 'scanner-video', (result, err) => {
+                // Prioritize rear camera
+                const rearCamera = videoInputDevices.find(device => 
+                    device.label.toLowerCase().includes('back') || 
+                    device.label.toLowerCase().includes('environment') ||
+                    device.kind === 'videoinput' && device.label.toLowerCase().includes('cámara trasera') // Common Spanish label
+                );
+
+                if (rearCamera) {
+                    deviceIdToUse = rearCamera.deviceId;
+                    console.log('Cámara trasera seleccionada por ID:', rearCamera.label);
+                } else {
+                    // Fallback to the first available device if no rear camera is explicitly found
+                    deviceIdToUse = videoInputDevices[0].deviceId;
+                    console.log('Usando la primera cámara disponible por ID:', videoInputDevices[0].label);
+                }
+
+                // Start decoding from the selected video device
+                codeReader.decodeFromVideoDevice(deviceIdToUse, 'scanner-video', (result, err) => {
                     if (result) {
                         console.log('Código de barras detectado:', result.getText());
                         searchInput.value = result.getText(); // Set the scanned code to the search input
