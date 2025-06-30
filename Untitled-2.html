@@ -315,7 +315,8 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/quagga-lib@0.12.1/dist/quagga.min.js"></script>
+    <!-- Updated QuaggaJS CDN link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.8.0/quagga.min.js"></script>
     <script>
         let storageData = []; // Variable to store all loaded data
         let currentPage = 1;
@@ -484,6 +485,18 @@
             // Clear previous content in the scanner container
             scannerContainer.innerHTML = '<div class="loading-message">Cargando cámara...</div>';
 
+            // IMPORTANT: Check if Quagga is defined before trying to use it
+            if (typeof Quagga === 'undefined') {
+                scannerContainer.innerHTML = `
+                    <div class="loading-message" style="color: red;">
+                        Error: La librería QuaggaJS no se ha cargado correctamente.<br>
+                        Por favor, verifica tu conexión a internet y la consola del navegador (pestaña 'Network') para ver si el archivo 'quagga.min.js' se descargó sin errores.
+                    </div>
+                `;
+                console.error('Error: QuaggaJS no está definido. La librería no se cargó.');
+                return;
+            }
+
             if (quaggaInitialized) {
                 Quagga.start(); // If already initialized, just start
                 return;
@@ -509,7 +522,7 @@
                             Error al iniciar la cámara: ${err.message || err}.<br>
                             Asegúrate de:<br>
                             1. Conceder permisos de cámara al navegador.<br>
-                            2. Estar usando un servidor web local (ej: Live Server) o HTTPS.
+                            2. Estar usando un servidor web seguro (HTTPS) o localhost.
                         </div>
                     `;
                     return;
