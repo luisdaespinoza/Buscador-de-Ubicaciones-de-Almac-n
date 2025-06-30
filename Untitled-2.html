@@ -46,10 +46,12 @@
         .search-container {
             margin-bottom: 25px;
             position: relative;
+            display: flex; /* Make it a flex container */
+            gap: 10px; /* Space between input and button */
         }
 
         #searchInput {
-            width: 100%;
+            flex-grow: 1; /* Allow input to take available space */
             padding: 12px 15px;
             border: 1px solid var(--border-color);
             border-radius: 5px;
@@ -64,6 +66,25 @@
             box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2);
         }
 
+        .scanner-button {
+            padding: 12px 15px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .scanner-button:hover {
+            background-color: #004494;
+        }
+
         .results-container {
             border-top: 1px solid var(--border-color);
             padding-top: 20px;
@@ -73,7 +94,7 @@
             padding: 10px 0;
             border-bottom: 1px dashed #eee;
             display: flex;
-            flex-direction: column; /* Changed to column for better stacking of info */
+            flex-direction: column;
             align-items: flex-start;
             flex-wrap: wrap;
         }
@@ -82,37 +103,36 @@
             border-bottom: none;
         }
 
-        .result-item div { /* New div to hold label and value */
+        .result-item div {
             display: flex;
             justify-content: space-between;
             width: 100%;
-            margin-bottom: 5px; /* Spacing between rows */
+            margin-bottom: 5px;
         }
 
         .result-item span {
             font-weight: 600;
             margin-right: 10px;
-            flex-basis: 40%; /* Adjust as needed */
+            flex-basis: 40%;
             box-sizing: border-box;
         }
 
         .result-item strong {
             color: var(--primary-color);
-            flex-basis: 55%; /* Adjust as needed */
+            flex-basis: 55%;
             text-align: right;
             box-sizing: border-box;
-            word-break: break-all; /* Ensures long numbers wrap */
+            word-break: break-all;
         }
         
-        .result-item .full-text { /* Style for the full text description */
+        .result-item .full-text {
             width: 100%;
             text-align: left;
             font-size: 0.9em;
             color: #555;
             margin-top: 5px;
-            word-wrap: break-word; /* Ensure long text wraps */
+            word-wrap: break-word;
         }
-
 
         .no-results {
             text-align: center;
@@ -127,7 +147,7 @@
             justify-content: center;
             align-items: center;
             margin-top: 20px;
-            gap: 15px; /* Spacing between elements */
+            gap: 15px;
         }
 
         .pagination-button {
@@ -142,7 +162,7 @@
         }
 
         .pagination-button:hover:not(:disabled) {
-            background-color: #004494; /* Darker shade on hover */
+            background-color: #004494;
         }
 
         .pagination-button:disabled {
@@ -155,8 +175,78 @@
         #pageInfo {
             font-weight: 600;
             color: var(--primary-color);
-            min-width: 120px; /* Ensure consistent width */
+            min-width: 120px;
             text-align: center;
+        }
+
+        /* Modal for scanner */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.8); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+            text-align: center;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #scanner-container {
+            width: 100%;
+            height: 300px; /* Adjust height as needed */
+            background-color: #333;
+            margin-top: 15px;
+            position: relative;
+        }
+
+        #scanner-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cover the container */
+            transform: scaleX(-1); /* Mirror the camera feed */
+        }
+
+        #scanner-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .loading-message {
+            color: #fff;
+            text-align: center;
+            padding: 20px;
         }
 
         /* Responsive adjustments */
@@ -168,6 +258,11 @@
             h1 {
                 font-size: 1.5em;
                 margin-bottom: 20px;
+            }
+
+            .search-container {
+                flex-direction: column; /* Stack input and button on small screens */
+                gap: 15px;
             }
 
             .result-item {
@@ -193,6 +288,10 @@
         <h1>Buscador de Ubicaciones de Almacén</h1>
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="Escribe la unidad, ubicación, material o texto (ej: 1101-01, 378, A101...)">
+            <button id="scanBarcodeButton" class="scanner-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-barcode"><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></svg>
+                Escanear
+            </button>
         </div>
         <div class="results-container" id="results">
             <div class="no-results" style="color: #666;">Cargando datos...</div>
@@ -204,20 +303,41 @@
         </div>
     </div>
 
+    <!-- Modal para el escáner de código de barras -->
+    <div id="barcodeScannerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Escáner de Código de Barras</h2>
+            <div id="scanner-container">
+                <div class="loading-message">Cargando cámara...</div>
+            </div>
+            <p>Asegúrate de que el código de barras esté bien iluminado y centrado en el recuadro.</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/quagga-lib@0.12.1/dist/quagga.min.js"></script>
     <script>
-        let storageData = []; // Variable para almacenar todos los datos cargados
+        let storageData = []; // Variable to store all loaded data
         let currentPage = 1;
-        const recordsPerPage = 100; // Número de elementos a mostrar por página
-        let currentFilteredData = []; // Almacena los datos filtrados para paginación
+        const recordsPerPage = 100; // Number of items to display per page
+        let currentFilteredData = []; // Stores filtered data for pagination
 
         const searchInput = document.getElementById('searchInput');
         const resultsDiv = document.getElementById('results');
         const prevPageButton = document.getElementById('prevPage');
         const nextPageButton = document.getElementById('nextPage');
         const pageInfoSpan = document.getElementById('pageInfo');
-        const paginationControlsDiv = document.querySelector('.pagination-controls'); // Referencia al contenedor de paginación
+        const paginationControlsDiv = document.querySelector('.pagination-controls'); // Reference to pagination container
+        const scanBarcodeButton = document.getElementById('scanBarcodeButton'); // New: Scan barcode button
 
-        // Función para actualizar los controles de paginación (botones y texto)
+        // Modal elements
+        const barcodeScannerModal = document.getElementById('barcodeScannerModal');
+        const closeButton = document.querySelector('.close-button');
+        const scannerContainer = document.getElementById('scanner-container');
+
+        let quaggaInitialized = false; // Flag to track QuaggaJS initialization
+
+        // Function to update pagination controls (buttons and text)
         function updatePaginationControls(totalResults) {
             const totalPages = Math.ceil(totalResults / recordsPerPage);
             pageInfoSpan.textContent = `Página ${currentPage} de ${totalPages}`;
@@ -225,22 +345,22 @@
             nextPageButton.disabled = currentPage === totalPages || totalPages === 0;
 
             if (totalResults === 0) {
-                paginationControlsDiv.style.display = 'none'; // Ocultar si no hay resultados
+                paginationControlsDiv.style.display = 'none'; // Hide if no results
             } else {
-                paginationControlsDiv.style.display = 'flex'; // Mostrar si hay resultados
+                paginationControlsDiv.style.display = 'flex'; // Show if there are results
             }
         }
 
-        // Función para mostrar los resultados de la página actual
+        // Function to display results for the current page
         function displayPaginatedResults() {
-            resultsDiv.innerHTML = ''; // Limpiar resultados anteriores
+            resultsDiv.innerHTML = ''; // Clear previous results
 
             if (currentFilteredData.length === 0) {
                 const noResults = document.createElement('div');
                 noResults.classList.add('no-results');
                 noResults.textContent = 'No se encontraron resultados.';
                 resultsDiv.appendChild(noResults);
-                updatePaginationControls(0); // Actualizar controles para 0 resultados
+                updatePaginationControls(0); // Update controls for 0 results
                 return;
             }
 
@@ -262,7 +382,7 @@
             updatePaginationControls(currentFilteredData.length);
         }
 
-        // Función para cargar los datos desde el archivo
+        // Function to load data from the file
         async function loadData() {
             try {
                 resultsDiv.innerHTML = `<div class="no-results" style="color: #666;">Cargando datos...</div>`;
@@ -274,7 +394,7 @@
 
                 const textData = await response.text();
 
-                // Procesa el texto para convertirlo en el formato de array de objetos
+                // Process the text to convert it into an array of objects format
                 storageData = textData.trim().split('\n').filter(line => line.includes('\t')).map(line => {
                     const parts = line.split('\t');
                     // Ensure each part exists before trimming
@@ -291,10 +411,10 @@
                     };
                 });
 
-                // Inicializar los datos filtrados y mostrar la primera página
+                // Initialize filtered data and display the first page
                 currentFilteredData = storageData;
-                currentPage = 1; // Reiniciar a la primera página después de cargar
-                displayPaginatedResults(); // Mostrar resultados paginados iniciales
+                currentPage = 1; // Reset to the first page after loading
+                displayPaginatedResults(); // Display initial paginated results
 
             } catch (error) {
                 console.error('Error al cargar los datos:', error);
@@ -302,21 +422,21 @@
             }
         }
 
-        // Event listener para el campo de búsqueda
+        // Event listener for the search input field
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
-            // Refiltrar todos los datos basándose en el nuevo término de búsqueda
+            // Refilter all data based on the new search term
             currentFilteredData = storageData.filter(item =>
                 item.location.toLowerCase().includes(searchTerm) ||
                 item.material.toLowerCase().includes(searchTerm) ||
                 item.unit.toLowerCase().includes(searchTerm) ||
                 item.text.toLowerCase().includes(searchTerm) // Include text in search
             );
-            currentPage = 1; // Reiniciar a la primera página para una nueva búsqueda
-            displayPaginatedResults(); // Mostrar resultados para la nueva búsqueda
+            currentPage = 1; // Reset to the first page for a new search
+            displayPaginatedResults(); // Display results for the new search
         });
 
-        // Event listeners para los botones de paginación
+        // Event listeners for pagination buttons
         prevPageButton.addEventListener('click', () => {
             if (currentPage > 1) {
                 currentPage--;
@@ -332,7 +452,76 @@
             }
         });
 
-        // Llama a la función para cargar los datos cuando la página se carga
+        // New: Event listener for the barcode scan button
+        scanBarcodeButton.addEventListener('click', () => {
+            barcodeScannerModal.style.display = 'flex'; // Show the modal
+            startBarcodeScanner();
+        });
+
+        // New: Event listener for the modal close button
+        closeButton.addEventListener('click', () => {
+            barcodeScannerModal.style.display = 'none'; // Hide the modal
+            stopBarcodeScanner();
+        });
+
+        // New: Close modal if clicking outside the content
+        window.addEventListener('click', (event) => {
+            if (event.target === barcodeScannerModal) {
+                barcodeScannerModal.style.display = 'none';
+                stopBarcodeScanner();
+            }
+        });
+
+        // New: Function to start the barcode scanner
+        function startBarcodeScanner() {
+            if (quaggaInitialized) {
+                Quagga.start(); // If already initialized, just start
+                return;
+            }
+
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: scannerContainer, // Or '#scanner-container'
+                    constraints: {
+                        facingMode: "environment" // Use rear camera if available
+                    },
+                },
+                decoder: {
+                    readers: ["ean_reader", "code_128_reader", "code_39_reader", "upc_reader", "ean_8_reader", "codabar_reader"] // Specify barcode types
+                }
+            }, function(err) {
+                if (err) {
+                    console.error('Error al iniciar Quagga:', err);
+                    scannerContainer.innerHTML = '<div class="loading-message" style="color: red;">Error al iniciar la cámara. Asegúrate de que tu navegador tenga permisos de cámara.</div>';
+                    return;
+                }
+                console.log("QuaggaJS inicializado. Iniciando escaneo...");
+                quaggaInitialized = true;
+                Quagga.start();
+            });
+
+            Quagga.onDetected(function(result) {
+                const code = result.codeResult.code;
+                searchInput.value = code; // Set the scanned code to the search input
+                barcodeScannerModal.style.display = 'none'; // Hide the modal
+                stopBarcodeScanner(); // Stop the scanner
+                // Trigger input event manually to update search results
+                const event = new Event('input', { bubbles: true });
+                searchInput.dispatchEvent(event);
+            });
+        }
+
+        // New: Function to stop the barcode scanner
+        function stopBarcodeScanner() {
+            if (quaggaInitialized) {
+                Quagga.stop();
+                console.log("QuaggaJS detenido.");
+            }
+        }
+
+        // Call the function to load data when the page loads
         loadData();
     </script>
 </body>
