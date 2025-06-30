@@ -320,10 +320,10 @@
     </div>
 
     <!-- ZXing-JS CDN link -->
-    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js"></script>
     <script>
-        // Import necessary classes from ZXing-JS
-        const { BrowserMultiFormatReader, DecodeHintType } = ZXing;
+        // No longer destructuring globally
+        // const { BrowserMultiFormatReader, DecodeHintType } = ZXing;
 
         let storageData = []; // Variable to store all loaded data
         let currentPage = 1;
@@ -406,7 +406,7 @@
 
                 // Process the text to convert it into an array of objects format
                 storageData = textData.trim().split('\n').filter(line => line.includes('\t')).map(line => {
-                    const parts = line = line.split('\t');
+                    const parts = line.split('\t');
                     // Ensure each part exists before trimming
                     const locationPart = parts[0] ? parts[0].trim() : 'Sin Ubicación';
                     const materialPart = parts[1] ? parts[1].trim() : 'Sin Material';
@@ -495,11 +495,23 @@
                 return;
             }
 
+            // IMPORTANT: Check if ZXing is defined before trying to use it
+            if (typeof ZXing === 'undefined' || typeof ZXing.BrowserMultiFormatReader === 'undefined') {
+                scannerLoadingMessage.innerHTML = `
+                    <div style="color: red;">
+                        Error: La librería ZXing-JS o su componente BrowserMultiFormatReader no están definidos.<br>
+                        Por favor, verifica tu conexión a internet y la consola del navegador (pestaña 'Network') para ver si el archivo 'index.min.js' se descargó sin errores.
+                    </div>
+                `;
+                console.error('Error: ZXing-JS o BrowserMultiFormatReader no están definidos.');
+                return;
+            }
+
             // Initialize ZXing-JS reader
             if (!codeReader) {
                 const hints = new Map();
                 // Specify the barcode formats you want to read
-                hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+                hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
                     ZXing.BarcodeFormat.EAN_13,
                     ZXing.BarcodeFormat.CODE_128,
                     ZXing.BarcodeFormat.CODE_39,
@@ -507,29 +519,37 @@
                     ZXing.BarcodeFormat.EAN_8,
                     ZXing.BarcodeFormat.CODABAR
                 ]);
-                codeReader = new BrowserMultiFormatReader(hints);
+                codeReader = new ZXing.BrowserMultiFormatReader(hints);
             }
 
             try {
-                // Get video input devices to try and select the rear camera
-                const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
-                let selectedDeviceId = null;
+                let constraints = {}; // Default empty constraints
 
-                // Try to find an 'environment' (rear) camera
-                const rearCamera = videoInputDevices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('environment'));
-                if (rearCamera) {
-                    selectedDeviceId = rearCamera.deviceId;
-                    console.log('Cámara trasera encontrada:', rearCamera.label);
-                } else if (videoInputDevices.length > 0) {
-                    // Fallback to the first available camera if no rear camera is explicitly found
-                    selectedDeviceId = videoInputDevices[0].deviceId;
-                    console.log('Usando la primera cámara disponible:', videoInputDevices[0].label);
+                // Log the type of the method before calling it
+                console.log('Tipo de ZXing.BrowserMultiFormatReader.listVideoInputDevices:', typeof ZXing.BrowserMultiFormatReader.listVideoInputDevices);
+
+                const videoInputDevices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+                console.log('Dispositivos de video encontrados:', videoInputDevices);
+
+                if (videoInputDevices.length > 0) {
+                    const rearCamera = videoInputDevices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('environment'));
+                    if (rearCamera) {
+                        constraints = { deviceId: { exact: rearCamera.deviceId } };
+                        console.log('Cámara trasera seleccionada por ID:', rearCamera.label);
+                    } else {
+                        // Fallback to the first device if no explicit rear camera found
+                        constraints = { deviceId: { exact: videoInputDevices[0].deviceId } };
+                        console.log('Usando la primera cámara disponible por ID:', videoInputDevices[0].label);
+                    }
                 } else {
-                    throw new Error('No se encontraron dispositivos de video.');
+                    // If no devices are listed, try a generic constraint as a last resort
+                    console.warn('No se encontraron dispositivos de video por listVideoInputDevices. Intentando con una restricción genérica (video: true).');
+                    constraints = { video: true }; // Let browser pick default camera
                 }
 
-                // Start decoding from the selected video device
-                codeReader.decodeFromVideoDevice(selectedDeviceId, 'scanner-video', (result, err) => {
+                // Start decoding from the selected video device or generic constraints
+                // The target is the video element itself
+                codeReader.decodeFromConstraints(constraints, 'scanner-video', (result, err) => {
                     if (result) {
                         console.log('Código de barras detectado:', result.getText());
                         searchInput.value = result.getText(); // Set the scanned code to the search input
@@ -542,9 +562,7 @@
                     if (err && !(err instanceof ZXing.NotFoundException)) {
                         // Log other errors, but ignore NotFoundException which means no barcode found yet
                         console.error('Error de escaneo ZXing-JS:', err);
-                        // You might want to show this error to the user if it's persistent
-                        // scannerLoadingMessage.innerHTML = `<div style="color: red;">Error de escaneo: ${err.message}.</div>`;
-                        // scannerLoadingMessage.style.display = 'block';
+                        // Optionally display error to user, but NotFoundException is normal
                     }
                 });
 
