@@ -484,8 +484,8 @@
                 return;
             }
 
-            // Clear previous content in the scanner container
-            scannerContainer.innerHTML = '<div class="loading-message">Cargando cámara...</div>';
+            // Clear previous content in the scanner container completely
+            scannerContainer.innerHTML = ''; 
 
             // IMPORTANT: Check if Quagga is defined before trying to use it
             if (typeof Quagga === 'undefined') {
