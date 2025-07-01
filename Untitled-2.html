@@ -453,8 +453,8 @@
                 resultItem.innerHTML = `
                     <div><span>Ubicación:</span> <strong>${item.location}</strong></div>
                     <div><span>Material:</span> <strong>${item.material}</strong></div>
+                    <div><span>Lote:</span> <strong>${item.lote}</strong></div> <!-- Changed from item.unit to item.lote -->}
                     <div><span>Unidad:</span> <strong>${item.unit}</strong></div>
-                    <div><span>Lote:</span> <strong>${item.lote}</strong></div> <!-- Changed from item.unit to item.lote -->
                     <div class="full-text"><span>Texto:</span> ${item.text}</div> `;
                 resultsDiv.appendChild(resultItem);
             });
