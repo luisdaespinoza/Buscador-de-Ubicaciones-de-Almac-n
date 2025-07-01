@@ -614,8 +614,13 @@
                 // If successful, start decoding with this constraint
                 codeReader.decodeFromConstraints({ video: { facingMode: 'environment' } }, 'scanner-video', (result, err) => {
                     if (result) {
-                        console.log('Código de barras detectado:', result.getText());
-                        searchInput.value = result.getText(); // Set the scanned code to the search input
+                        const scannedText = result.getText();
+                        // Extract the last 18 characters
+                        const processedText = scannedText.slice(-18); 
+                        console.log('Código de barras detectado (original):', scannedText);
+                        console.log('Código de barras procesado (últimos 18 caracteres):', processedText);
+                        
+                        searchInput.value = processedText; // Set the processed code to the search input
                         barcodeScannerModal.style.display = 'none'; // Hide the modal
                         stopBarcodeScanner(); // Stop the scanner
                         const event = new Event('input', { bubbles: true }); // Trigger input event
@@ -639,8 +644,13 @@
 
                     codeReader.decodeFromConstraints({ video: true }, 'scanner-video', (result, err) => {
                         if (result) {
-                            console.log('Código de barras detectado:', result.getText());
-                            searchInput.value = result.getText(); // Set the scanned code to the search input
+                            const scannedText = result.getText();
+                            // Extract the last 18 characters
+                            const processedText = scannedText.slice(-18); 
+                            console.log('Código de barras detectado (original):', scannedText);
+                            console.log('Código de barras procesado (últimos 18 caracteres):', processedText);
+
+                            searchInput.value = processedText; // Set the processed code to the search input
                             barcodeScannerModal.style.display = 'none'; // Hide the modal
                             stopBarcodeScanner(); // Stop the scanner
                             const event = new Event('input', { bubbles: true }); // Trigger input event
