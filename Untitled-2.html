@@ -454,7 +454,7 @@
                     <div><span>Ubicación:</span> <strong>${item.location}</strong></div>
                     <div><span>Material:</span> <strong>${item.material}</strong></div>
                     <div><span>Unidad:</span> <strong>${item.unit}</strong></div>
-                    <div><span>Lote:</span> <strong>${item.unit}</strong></div>
+                    <div><span>Lote:</span> <strong>${item.lote}</strong></div> <!-- Changed from item.unit to item.lote -->
                     <div class="full-text"><span>Texto:</span> ${item.text}</div> `;
                 resultsDiv.appendChild(resultItem);
             });
@@ -477,19 +477,21 @@
                 // Process the text to convert it into an array of objects format
                 storageData = textData.trim().split('\n').filter(line => line.includes('\t')).map(line => {
                     const parts = line.split('\t');
-                    // Ensure each part exists before trimming
+                    // Ensure each part exists before trimming and handle the new 'lote' field
                     const locationPart = parts[0] ? parts[0].trim() : 'Sin Ubicación';
                     const materialPart = parts[1] ? parts[1].trim() : 'Sin Material';
                     const unitPart = parts[2] ? parts[2].trim() : 'Sin Unidad';
-                    const unitLote = parts[2] ? parts[2].trim() : 'Sin Lote';
-                    const textPart = parts[3] ? parts[3].trim() : 'Sin Texto'; // New: Text part
+                    // Assuming 'lote' is the fourth column (index 3)
+                    const lotePart = parts[3] ? parts[3].trim() : 'Sin Lote'; 
+                    // Assuming 'text' is the fifth column (index 4)
+                    const textPart = parts[4] ? parts[4].trim() : 'Sin Texto'; 
 
                     return {
                         location: locationPart,
                         material: materialPart,
                         unit: unitPart,
-                        Lote: unitLote,
-                        text: textPart // Assign new text property
+                        lote: lotePart, // Assign new lote property
+                        text: textPart 
                     };
                 });
 
@@ -519,8 +521,8 @@
                 item.location.toLowerCase().includes(searchTerm) ||
                 item.material.toLowerCase().includes(searchTerm) ||
                 item.unit.toLowerCase().includes(searchTerm) ||
-                item.Lote.toLowerCase().includes(searchTerm) ||
-                item.text.toLowerCase().includes(searchTerm) // Include text in search
+                item.lote.toLowerCase().includes(searchTerm) || // Include lote in search
+                item.text.toLowerCase().includes(searchTerm) 
             );
             currentPage = 1; // Reset to the first page for a new search
             displayPaginatedResults(); // Display results for the new search
