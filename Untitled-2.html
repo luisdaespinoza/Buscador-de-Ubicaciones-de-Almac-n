@@ -454,6 +454,7 @@
                     <div><span>Ubicación:</span> <strong>${item.location}</strong></div>
                     <div><span>Material:</span> <strong>${item.material}</strong></div>
                     <div><span>Unidad:</span> <strong>${item.unit}</strong></div>
+                    <div><span>Lote:</span> <strong>${item.unit}</strong></div>
                     <div class="full-text"><span>Texto:</span> ${item.text}</div> `;
                 resultsDiv.appendChild(resultItem);
             });
@@ -480,12 +481,14 @@
                     const locationPart = parts[0] ? parts[0].trim() : 'Sin Ubicación';
                     const materialPart = parts[1] ? parts[1].trim() : 'Sin Material';
                     const unitPart = parts[2] ? parts[2].trim() : 'Sin Unidad';
+                    const unitLote = parts[2] ? parts[2].trim() : 'Sin Lote';
                     const textPart = parts[3] ? parts[3].trim() : 'Sin Texto'; // New: Text part
 
                     return {
                         location: locationPart,
                         material: materialPart,
                         unit: unitPart,
+                        Lote: unitLote,
                         text: textPart // Assign new text property
                     };
                 });
@@ -516,6 +519,7 @@
                 item.location.toLowerCase().includes(searchTerm) ||
                 item.material.toLowerCase().includes(searchTerm) ||
                 item.unit.toLowerCase().includes(searchTerm) ||
+                item.Lote.toLowerCase().includes(searchTerm) ||
                 item.text.toLowerCase().includes(searchTerm) // Include text in search
             );
             currentPage = 1; // Reset to the first page for a new search
