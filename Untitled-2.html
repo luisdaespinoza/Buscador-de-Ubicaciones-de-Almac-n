@@ -480,17 +480,17 @@
                     // Ensure each part exists before trimming and handle the new 'lote' field
                     const locationPart = parts[0] ? parts[0].trim() : 'Sin Ubicación';
                     const materialPart = parts[1] ? parts[1].trim() : 'Sin Material';
-                    const unitPart = parts[2] ? parts[2].trim() : 'Sin Lote';
+                    const unitPart = parts[2] ? parts[2].trim() : 'Sin Unidad';
                     // Assuming 'lote' is the fourth column (index 3)
-                    const lotePart = parts[3] ? parts[3].trim() : 'Sin Unidad'; 
+                    const lotePart = parts[3] ? parts[3].trim() : 'Sin Lote'; 
                     // Assuming 'text' is the fifth column (index 4)
                     const textPart = parts[4] ? parts[4].trim() : 'Sin Texto'; 
 
                     return {
                         location: locationPart,
                         material: materialPart,
-                        lote: lotePart, // Assign new lote property
                         unit: unitPart,
+                        lote: lotePart, // Assign new lote property
                         text: textPart 
                     };
                 });
@@ -520,8 +520,8 @@
             currentFilteredData = storageData.filter(item =>
                 item.location.toLowerCase().includes(searchTerm) ||
                 item.material.toLowerCase().includes(searchTerm) ||
-                item.lote.toLowerCase().includes(searchTerm) || // Include lote in search
                 item.unit.toLowerCase().includes(searchTerm) ||
+                item.lote.toLowerCase().includes(searchTerm) || // Include lote in search
                 item.text.toLowerCase().includes(searchTerm) 
             );
             currentPage = 1; // Reset to the first page for a new search
