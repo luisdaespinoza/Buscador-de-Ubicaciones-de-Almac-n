@@ -520,8 +520,8 @@
             currentFilteredData = storageData.filter(item =>
                 item.location.toLowerCase().includes(searchTerm) ||
                 item.material.toLowerCase().includes(searchTerm) ||
-                item.unit.toLowerCase().includes(searchTerm) ||
                 item.lote.toLowerCase().includes(searchTerm) || // Include lote in search
+                item.unit.toLowerCase().includes(searchTerm) ||
                 item.text.toLowerCase().includes(searchTerm) 
             );
             currentPage = 1; // Reset to the first page for a new search
