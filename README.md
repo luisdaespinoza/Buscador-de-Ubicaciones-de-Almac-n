@@ -65,11 +65,11 @@ Debido a las restricciones de seguridad de los navegadores (CORS), **no puedes s
 
 ## Notas de Desarrollo
 
-* El archivo HTML se nombró `Untitled-2 (1).html`. Considera renombrarlo a `index.html` para una mayor convención en proyectos web.
+* El archivo HTML se nombró `Untitled-2.html`. Considera renombrarlo a `index.html` para una mayor convención en proyectos web.
 * El campo `lote` y `unidad` en los resultados están mapeados a `item.unit` y `item.lote` respectivamente, lo que podría generar confusión. Revisa la lógica en el JavaScript si quieres que el campo "Lote" muestre `item.lote` y "Unidad" muestre `item.unit` o viceversa. Actualmente, el código asigna `item.unit` a "Lote" y `item.lote` a "Unidad" en la visualización, mientras que los datos se leen como `parts[2]` para `unit` y `parts[3]` para `lote`.
 * La lógica de extracción de los últimos 18 caracteres del código de barras escaneado (`scannedText.slice(-18)`) está implementada. Si tus códigos de barras tienen otra longitud o formato, necesitarás ajustar esta línea.
 
 ---
 
-**Autor:** [Tu Nombre o Nombre de la Organización, si aplica]
-**Licencia:** [Si deseas aplicar una licencia de código abierto, como MIT o Apache 2.0, puedes mencionarla aquí y enlazar al archivo de licencia si lo incluyes en tu repositorio].
+**Autor:** [Luis David Espinoza @perreohipertenso]
+**USO LIBRE**
