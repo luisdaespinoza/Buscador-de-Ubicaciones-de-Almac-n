@@ -72,4 +72,6 @@ Debido a las restricciones de seguridad de los navegadores (CORS), **no puedes s
 ---
 
 **Autor:** [Luis David Espinoza @perreohipertenso]
+
+
 **USO LIBRE**
