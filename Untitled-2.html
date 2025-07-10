@@ -48,6 +48,7 @@
             position: relative;
             display: flex; /* Make it a flex container */
             gap: 10px; /* Space between input and button */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
         }
 
         #searchInput {
@@ -59,6 +60,7 @@
             box-sizing: border-box;
             transition: border-color 0.3s ease;
             padding-right: 40px; /* Space for clear button */
+            min-width: 200px; /* Ensure input doesn't get too small */
         }
 
         #searchInput:focus {
@@ -69,7 +71,7 @@
 
         .clear-search-button {
             position: absolute;
-            right: 55px; /* Adjust based on scanner button width */
+            right: 55px; /* Adjust based on scanner button width + margin */
             top: 50%;
             transform: translateY(-50%);
             background: none;
@@ -107,6 +109,13 @@
         .scanner-button:hover {
             background-color: #004494;
         }
+        
+        /* Specific style for "Ver Correcciones" button if it wraps */
+        .search-container > .scanner-button:last-child {
+            margin-left: auto; /* Push it to the right if space allows, or stack */
+            flex-shrink: 0; /* Prevent it from shrinking */
+        }
+
 
         .results-container {
             border-top: 1px solid var(--border-color);
@@ -206,7 +215,7 @@
         .modal {
             display: none; /* Hidden by default */
             position: fixed; /* Stay in place */
-            z-index: 1; /* Sit on top */
+            z-index: 1000; /* Sit on top, higher than other content */
             left: 0;
             top: 0;
             width: 100%; /* Full width */
@@ -222,8 +231,8 @@
             margin: auto;
             padding: 20px;
             border-radius: 10px;
-            width: 80%;
-            max-width: 500px;
+            width: 90%; /* Increased width for better content display */
+            max-width: 600px; /* Slightly larger max-width */
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             position: relative;
             text-align: center;
@@ -234,13 +243,16 @@
             float: right;
             font-size: 28px;
             font-weight: bold;
+            position: absolute; /* Position relative to modal-content */
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
         }
 
         .close-button:hover,
         .close-button:focus {
             color: black;
             text-decoration: none;
-            cursor: pointer;
         }
 
         #scanner-container {
@@ -325,7 +337,7 @@
             }
 
             .search-container {
-                flex-direction: column; /* Stack input and button on small screens */
+                flex-direction: column; /* Stack input and buttons on small screens */
                 gap: 15px;
             }
             .clear-search-button {
@@ -349,6 +361,45 @@
                 font-size: 0.9em;
             }
         }
+
+        /* Styles for corrections list with checkbox */
+        .correction-item {
+            display: flex;
+            align-items: flex-start; /* Align checkbox with top of text */
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .correction-item:last-child {
+            border-bottom: none;
+        }
+        .correction-item input[type="checkbox"] {
+            margin-right: 10px;
+            margin-top: 5px; /* Align with first line of text */
+            min-width: 20px; /* Ensure enough space for clickable area */
+            min-height: 20px;
+            cursor: pointer;
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
+        }
+        .correction-text {
+            flex-grow: 1;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+        }
+        .correction-text .location {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        .correction-text .observation {
+            font-size: 0.9em;
+            color: #555;
+            word-wrap: break-word;
+        }
+        .correction-item.checked .correction-text {
+            text-decoration: line-through;
+            color: #999;
+        }
     </style>
 </head>
 <body>
@@ -363,6 +414,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-barcode"><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></svg>
                 Escanear
             </button>
+            <button id="viewCorrectionsButton" class="scanner-button" style="background-color: #6c757d;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-checks"><path d="m3 12 2 2 4-4"/><path d="M12 6H3"/><path d="M16 18H3"/><path d="M16 12H3"/><path d="M18 9l2 2 4-4"/><path d="M18 15l2 2 4-4"/></svg>
+                Ver Correcciones
+            </button>
         </div>
         <div class="results-container" id="results">
             <div class="no-results" style="color: #666;">Cargando datos...</div>
@@ -374,22 +429,28 @@
         </div>
     </div>
 
-    <!-- Modal para el escáner de código de barras -->
     <div id="barcodeScannerModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Escáner de Código de Barras</h2>
             <div id="scanner-container">
-                <!-- Video element for camera feed - ZXing-JS will attach to this -->
                 <video id="scanner-video" autoplay playsinline></video>
-                <div id="scan-indicator" class="scan-indicator"></div> <!-- New scan indicator -->
-                <div id="scanner-loading-message" class="loading-message">Cargando cámara...</div>
+                <div id="scan-indicator" class="scan-indicator"></div> <div id="scanner-loading-message" class="loading-message">Cargando cámara...</div>
             </div>
             <p>Asegúrate de que el código de barras esté bien iluminado y centrado en el recuadro.</p>
         </div>
     </div>
 
-    <!-- ZXing-JS CDN link -->
+    <div id="correctionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeCorrectionsButton">&times;</span>
+            <h2>Correcciones Pendientes</h2>
+            <div id="correctionsList" style="text-align: left; max-height: 400px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 5px;">
+                <div class="no-results" style="color: #666;">Cargando correcciones...</div>
+            </div>
+            </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js"></script>
     <script>
         let storageData = []; // Variable to store all loaded data
@@ -404,17 +465,26 @@
         const pageInfoSpan = document.getElementById('pageInfo');
         const paginationControlsDiv = document.querySelector('.pagination-controls'); // Reference to pagination container
         const scanBarcodeButton = document.getElementById('scanBarcodeButton'); // Scan barcode button
-        const clearSearchButton = document.getElementById('clearSearchButton'); // New: Clear search button
+        const clearSearchButton = document.getElementById('clearSearchButton'); // Clear search button
 
         // Modal elements
         const barcodeScannerModal = document.getElementById('barcodeScannerModal');
-        const closeButton = document.querySelector('.close-button');
+        const closeButton = document.querySelector('#barcodeScannerModal .close-button'); // Select specifically for scanner modal
         const scannerContainer = document.getElementById('scanner-container');
         const scannerVideo = document.getElementById('scanner-video'); // Reference to the video element
         const scannerLoadingMessage = document.getElementById('scanner-loading-message'); // Reference to the loading message
-        const scanIndicator = document.getElementById('scan-indicator'); // New: Scan indicator element
+        const scanIndicator = document.getElementById('scan-indicator'); // Scan indicator element
 
         let codeReader = null; // ZXing-JS code reader instance
+
+        // --- Lógica para la pantalla de Correcciones ---
+        const viewCorrectionsButton = document.getElementById('viewCorrectionsButton');
+        const correctionsModal = document.getElementById('correctionsModal');
+        const closeCorrectionsButton = document.getElementById('closeCorrectionsButton'); // Select specifically for corrections modal
+        const correctionsListDiv = document.getElementById('correctionsList');
+        
+        let allCorrections = []; // Almacenará todas las correcciones
+        const CHECKED_CORRECTIONS_KEY = 'checkedCorrectionsState'; // Key for LocalStorage
 
         // Function to update pagination controls (buttons and text)
         function updatePaginationControls(totalResults) {
@@ -453,7 +523,7 @@
                 resultItem.innerHTML = `
                     <div><span>Ubicación:</span> <strong>${item.location}</strong></div>
                     <div><span>Material:</span> <strong>${item.material}</strong></div>
-                    <div><span>Lote:</span> <strong>${item.unit}</strong></div> <!-- Changed from item.unit to item.lote -->
+                    <div><span>Lote:</span> <strong>${item.unit}</strong></div>
                     <div><span>Unidad:</span> <strong>${item.lote}</strong></div>
                     <div class="full-text"><span>Texto:</span> ${item.text}</div> `;
                 resultsDiv.appendChild(resultItem);
@@ -474,28 +544,23 @@
 
                 const textData = await response.text();
 
-                // Process the text to convert it into an array of objects format
                 storageData = textData.trim().split('\n').filter(line => line.includes('\t')).map(line => {
                     const parts = line.split('\t');
-                    // Ensure each part exists before trimming and handle the new 'lote' field
                     const locationPart = parts[0] ? parts[0].trim() : 'Sin Ubicación';
                     const materialPart = parts[1] ? parts[1].trim() : 'Sin Material';
                     const unitPart = parts[2] ? parts[2].trim() : 'Sin Unidad';
-                    // Assuming 'lote' is the fourth column (index 3)
-                    const lotePart = parts[3] ? parts[3].trim() : 'Sin Lote'; 
-                    // Assuming 'text' is the fifth column (index 4)
+                    const lotePart = parts[3] ? parts[3].trim() : 'Sin Lote';
                     const textPart = parts[4] ? parts[4].trim() : 'Sin Texto'; 
 
                     return {
                         location: locationPart,
                         material: materialPart,
                         unit: unitPart,
-                        lote: lotePart, // Assign new lote property
+                        lote: lotePart,
                         text: textPart 
                     };
                 });
 
-                // Initialize filtered data and display the first page
                 currentFilteredData = storageData;
                 currentPage = 1; // Reset to the first page after loading
                 displayPaginatedResults(); // Display initial paginated results
@@ -521,7 +586,7 @@
                 item.location.toLowerCase().includes(searchTerm) ||
                 item.material.toLowerCase().includes(searchTerm) ||
                 item.unit.toLowerCase().includes(searchTerm) ||
-                item.lote.toLowerCase().includes(searchTerm) || // Include lote in search
+                item.lote.toLowerCase().includes(searchTerm) ||
                 item.text.toLowerCase().includes(searchTerm) 
             );
             currentPage = 1; // Reset to the first page for a new search
@@ -557,7 +622,7 @@
             startBarcodeScanner();
         });
 
-        // Event listener for the modal close button
+        // Event listener for the modal close button (scanner)
         closeButton.addEventListener('click', () => {
             barcodeScannerModal.style.display = 'none'; // Hide the modal
             stopBarcodeScanner();
@@ -691,19 +756,19 @@
                             </div>
                         `;
                     } else if (finalErr.name === 'NotFoundError') {
-                         errorMessage = `
-                            <div style="color: red;">
-                                Cámara no encontrada: <strong>${finalErr.name || finalErr.message}</strong>.<br><br>
-                                Asegúrate de que tu dispositivo tenga una cámara conectada y habilitada, y que no esté siendo utilizada por otra aplicación en este momento.
-                            </div>
-                        `;
+                            errorMessage = `
+                                <div style="color: red;">
+                                    Cámara no encontrada: <strong>${finalErr.name || finalErr.message}</strong>.<br><br>
+                                    Asegúrate de que tu dispositivo tenga una cámara conectada y habilitada, y que no esté siendo utilizada por otra aplicación en este momento.
+                                </div>
+                            `;
                     } else if (finalErr.name === 'NotReadableError') {
-                         errorMessage = `
-                            <div style="color: red;">
-                                Cámara no legible: <strong>${finalErr.name || finalErr.message}</strong>.<br><br>
-                                La cámara está siendo utilizada por otra aplicación o no está disponible. Por favor, cierra otras aplicaciones que usen la cámara.
-                            </div>
-                        `;
+                            errorMessage = `
+                                <div style="color: red;">
+                                    Cámara no legible: <strong>${finalErr.name || finalErr.message}</strong>.<br><br>
+                                    La cámara está siendo utilizada por otra aplicación o no está disponible. Por favor, cierra otras aplicaciones que usen la cámara.
+                                </div>
+                            `;
                     }
                     scannerLoadingMessage.innerHTML = errorMessage;
                     scannerLoadingMessage.style.display = 'block'; // Ensure error message is visible
@@ -720,8 +785,155 @@
             }
         }
 
+        // --- Lógica para la pantalla de Correcciones ---
+
+        // Función para obtener una clave única para una corrección para LocalStorage
+        function getCorrectionUniqueKey(correction) {
+            return `${correction.location};${correction.observation}`;
+        }
+
+        // Función para guardar solo los estados 'checked' en LocalStorage
+        function saveCheckedState() {
+            const checkedStates = {};
+            allCorrections.forEach(correction => {
+                if (correction.isChecked) {
+                    checkedStates[getCorrectionUniqueKey(correction)] = true;
+                }
+            });
+            localStorage.setItem(CHECKED_CORRECTIONS_KEY, JSON.stringify(checkedStates));
+            console.log('Estados de corrección guardados en LocalStorage.');
+        }
+
+        // Function to load corrections directly from the .txt file and merge with checked states
+        async function loadCorrectionsFromFile() {
+            try {
+                correctionsListDiv.innerHTML = '<div class="no-results" style="color: #666;">Cargando correcciones...</div>'; // Show loading message
+                const response = await fetch('correcciones.txt');
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                const textData = await response.text();
+                
+                // Parse corrections from TXT
+                const loadedCorrections = textData.split('\n')
+                    .filter(line => line.trim() !== '')
+                    .map(line => {
+                        const [location, observation] = line.split(';'); // Assuming ';' is the delimiter
+                        return {
+                            location: location ? location.trim() : 'Sin ubicación',
+                            observation: observation ? observation.trim() : 'Sin observación',
+                            isChecked: false // Default to unchecked
+                        };
+                    });
+                
+                // Load checked states from LocalStorage
+                const storedCheckedStatesString = localStorage.getItem(CHECKED_CORRECTIONS_KEY);
+                let storedCheckedStates = {};
+                if (storedCheckedStatesString) {
+                    try {
+                        storedCheckedStates = JSON.parse(storedCheckedStatesString);
+                    } catch (e) {
+                        console.error('Error parsing stored checked states from LocalStorage:', e);
+                        localStorage.removeItem(CHECKED_CORRECTIONS_KEY); // Clear corrupt data
+                    }
+                }
+
+                // Merge loaded corrections with stored checked states
+                const currentCheckedStates = {}; // Will store states for current corrections
+                allCorrections = loadedCorrections.map(correction => { // Corrected: was loadedCorrefections
+                    const key = getCorrectionUniqueKey(correction);
+                    if (storedCheckedStates[key]) {
+                        correction.isChecked = true;
+                    }
+                    currentCheckedStates[key] = correction.isChecked; // Store the state for current corrections
+                    return correction;
+                });
+
+                // Update LocalStorage to remove states for corrections that no longer exist in the TXT
+                // This is important for cleanliness and avoiding accumulation of stale data
+                localStorage.setItem(CHECKED_CORRECTIONS_KEY, JSON.stringify(currentCheckedStates));
+
+
+                console.log('Correcciones cargadas y estados fusionados desde corrections.txt y LocalStorage.');
+            } catch (error) {
+                console.error('Error al cargar corrections.txt:', error);
+                correctionsListDiv.innerHTML = `<div class="no-results">Error al cargar correcciones: ${error.message}. Asegúrate de que "correcciones.txt" existe y es accesible.</div>`;
+                allCorrections = []; // Ensure allCorrections is empty if loading fails
+            } finally {
+                displayCorrections(); // Always attempt to display, even if empty or error
+            }
+        }
+
+        // Function to display corrections in the div
+        function displayCorrections() {
+            correctionsListDiv.innerHTML = ''; // Clear previous list
+            if (allCorrections.length === 0) {
+                correctionsListDiv.innerHTML = '<div class="no-results">No hay correcciones registradas.</div>';
+                return;
+            }
+            allCorrections.forEach((correction, index) => {
+                const correctionItem = document.createElement('div');
+                correctionItem.classList.add('correction-item');
+                if (correction.isChecked) {
+                    correctionItem.classList.add('checked');
+                }
+                
+                correctionItem.innerHTML = `
+                    <input type="checkbox" id="correction-${index}" data-index="${index}" ${correction.isChecked ? 'checked' : ''}>
+                    <div class="correction-text">
+                        <span class="location">${correction.location}</span>
+                        <span class="observation">${correction.observation}</span>
+                    </div>
+                `;
+                correctionsListDiv.appendChild(correctionItem);
+
+                // Add event listener to the checkbox
+                const checkbox = correctionItem.querySelector(`#correction-${index}`);
+                checkbox.addEventListener('change', (event) => {
+                    const changedIndex = parseInt(event.target.dataset.index);
+                    const isChecked = event.target.checked;
+                    handleCorrectionCheck(changedIndex, isChecked);
+                });
+            });
+        }
+
+        // Function to handle checkbox change for a correction
+        function handleCorrectionCheck(index, isChecked) {
+            if (allCorrections[index]) {
+                allCorrections[index].isChecked = isChecked;
+                saveCheckedState(); // Save the updated state
+                // Optionally, update the visual appearance immediately
+                const itemElement = correctionsListDiv.querySelector(`.correction-item:nth-child(${index + 1})`);
+                if (itemElement) {
+                    if (isChecked) {
+                        itemElement.classList.add('checked');
+                    } else {
+                        itemElement.classList.remove('checked');
+                    }
+                }
+            }
+        }
+
+        // Event listeners for the corrections modal
+        viewCorrectionsButton.addEventListener('click', () => {
+            correctionsModal.style.display = 'flex'; // Show the modal
+            loadCorrectionsFromFile(); // Reload corrections every time the modal is opened
+        });
+
+        closeCorrectionsButton.addEventListener('click', () => {
+            correctionsModal.style.display = 'none'; // Hide the modal
+        });
+
+        // Close modal if clicked outside the content
+        window.addEventListener('click', (event) => {
+            if (event.target === correctionsModal) {
+                correctionsModal.style.display = 'none';
+            }
+        });
+
         // Call the function to load data when the page loads
         loadData();
+        // Corrections will be loaded when the modal is opened, not on page load
     </script>
 </body>
 </html>
