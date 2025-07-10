@@ -1,73 +1,90 @@
 # Buscador de Ubicaciones de Almacén
 
-Este proyecto es una aplicación web sencilla para buscar y encontrar ubicaciones de almacén, materiales, lotes y unidades basándose en datos cargados desde un archivo de texto. Incluye una funcionalidad de escáner de código de barras para facilitar la búsqueda.
+Este es un sistema de búsqueda simple basado en HTML, CSS y JavaScript para localizar ítems dentro de un almacén. Permite buscar por diferentes atributos del producto y visualizar los resultados de forma paginada. Además, incluye una función de escáner de código de barras (utilizando la librería ZXing-JS) para facilitar la búsqueda, y un gestor de correcciones/observaciones pendientes.
 
 ## Características
 
-* **Búsqueda en Tiempo Real:** Filtra instantáneamente los resultados a medida que escribes en el campo de búsqueda.
-* **Paginación de Resultados:** Muestra los resultados en páginas para una mejor legibilidad y manejo de grandes volúmenes de datos.
-* **Escáner de Código de Barras:** Permite escanear códigos de barras (EAN-13, CODE-128, CODE-39, UPC-A, EAN-8, CODABAR) usando la cámara del dispositivo para rellenar automáticamente el campo de búsqueda.
-* **Limpieza de Búsqueda:** Botón para limpiar rápidamente el campo de búsqueda.
-* **Carga de Datos Flexible:** Carga los datos de almacén desde un archivo `almacen_data.txt` local, permitiendo una fácil actualización de la información.
-* **Diseño Responsivo:** Adaptado para funcionar tanto en dispositivos de escritorio como móviles.
+* **Búsqueda Rápida:** Filtra los datos del almacén por ubicación, material, unidad, lote o cualquier texto contenido en la descripción.
+* **Paginación de Resultados:** Muestra los resultados en páginas para una navegación eficiente, especialmente con grandes volúmenes de datos.
+* **Escáner de Código de Barras:** Integración con la cámara del dispositivo para escanear códigos de barras (EAN-13, CODE-128, CODE-39, UPC-A, EAN-8, CODABAR) y rellenar automáticamente el campo de búsqueda con los últimos 18 caracteres del código escaneado.
+* **Gestión de Correcciones/Observaciones:** Una sección dedicada para listar y gestionar correcciones o tareas pendientes en el almacén, con la capacidad de marcar elementos como completados (estado persistente usando `localStorage`).
+* **Diseño Responsivo:** Interfaz adaptable a diferentes tamaños de pantalla (escritorio y móvil).
 
-## Cómo Usar
+## Archivos del Proyecto
 
-### 1. Preparación de los Datos
+* `index.html`: El archivo principal de la aplicación que contiene la estructura HTML, estilos CSS y lógica JavaScript.
+* `almacen_data.txt`: Archivo de texto que contiene los datos del almacén. Cada línea representa un registro y los campos están separados por tabulaciones (`\t`).
+* `correcciones.txt`: Archivo de texto que contiene las correcciones o tareas pendientes. Cada línea representa una corrección, con la ubicación y la observación separadas por un punto y coma (`;`).
 
-La aplicación espera encontrar un archivo llamado `almacen_data.txt` en el mismo directorio que el archivo `index.html`. Este archivo debe contener los datos del almacén en un formato separado por tabulaciones (`\t`), con la siguiente estructura por línea:
-Ubicación\tMaterial\tUnidad\tLote\tTexto
-**Ejemplo de `almacen_data.txt`:**
-A101-01	MaterialXYZ	UN456	Lote123	Descripción del material XYZ en ubicación A101
-B202-05	TornillosM8	KG789	Lote456	Caja de tornillos M8
-C303-10	PinturaBlanca	LT101	Lote789	Pintura acrílica blanca para exteriores
-Asegúrate de que tus datos sigan este formato para que la aplicación los lea correctamente.
+## Estructura de `almacen_data.txt`
 
-### 2. Abrir la Aplicación
+El archivo `almacen_data.txt` debe tener el siguiente formato, con los campos separados por una tabulación (`\t`):
 
-Debido a las restricciones de seguridad de los navegadores (CORS), **no puedes simplemente abrir el archivo `Untitled-2 (1).html` directamente desde tu sistema de archivos** (`file://`). La funcionalidad de cargar `almacen_data.txt` y, especialmente, el escáner de código de barras (que accede a la cámara), requiere un servidor web.
+Ubicación\tMaterial\tUnidad\tLote\tTextoAdicional
+Ej: 1101-01    378    CAJA    LOTE123    Descripción del Material X
+Ej: A101-02    ABC-456    UNIDAD    LOTE456    Pieza de repuesto Y
 
-**Opciones para Ejecutar:**
 
-* **Opción 1: Usar una extensión de servidor local (Recomendado para desarrollo)**
-    Si usas Visual Studio Code, puedes instalar la extensión "Live Server". Haz clic derecho en `Untitled-2 (1).html` y selecciona "Open with Live Server". Esto abrirá el archivo en tu navegador a través de un servidor local (ej. `http://127.0.0.1:5500/Untitled-2%20(1).html`).
+**Es crucial que cada campo esté separado por un carácter de tabulación `\t` para que la aplicación pueda parsear los datos correctamente.**
 
-* **Opción 2: Usar un servidor HTTP simple (Python)**
-    Si tienes Python instalado, puedes navegar a la carpeta donde guardaste `Untitled-2 (1).html` y `almacen_data.txt` en tu terminal, y ejecutar:
-    ```bash
-    python -m http.server 8000
-    ```
-    Luego, abre tu navegador y ve a `http://localhost:8000/Untitled-2%20(1).html`.
+## Estructura de `correcciones.txt`
 
-* **Opción 3: Desplegar en un servidor web real**
-    Para uso en producción o compartido, sube todos los archivos (`Untitled-2 (1).html`, `almacen_data.txt`, etc.) a un servidor web (Apache, Nginx, GitHub Pages, Netlify, Vercel, etc.).
+El archivo `correcciones.txt` debe tener el siguiente formato, con los campos separados por un punto y coma (`;`):
 
-### 3. Interfaz de Usuario
+Ubicación;Observación/Tarea
+Ej: 1101-01;Revisar stock de material ABC
+Ej: B205;Ajustar ubicación de herramientas
 
-* **Campo de Búsqueda:** Ingresa cualquier parte de la ubicación, material, unidad, lote o texto para filtrar los resultados.
-* **Botón "Escanear":** Haz clic para abrir el modal del escáner de código de barras. Una vez que un código es escaneado, los últimos 18 caracteres del código serán ingresados automáticamente en el campo de búsqueda.
-* **Botón "Limpiar Búsqueda" (`x`):** Aparece cuando hay texto en el campo de búsqueda y permite borrarlo rápidamente.
-* **Resultados:** Los elementos coincidentes se mostrarán debajo del campo de búsqueda. Cada resultado muestra la Ubicación, Material, Lote, Unidad y Texto completo.
-* **Paginación:** Utiliza los botones "Anterior" y "Siguiente" para navegar entre las páginas de resultados.
-
-## Tecnología Utilizada
-
-* **HTML5:** Estructura de la página.
-* **CSS3:** Estilos para la interfaz de usuario.
-* **JavaScript (ES6+):** Lógica de búsqueda, paginación y manejo del escáner.
-* **ZXing-JS:** Librería JavaScript para el escaneo de códigos de barras. (CDN utilizado: `https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js`)
-* **SVG Icons:** Icono de código de barras integrado directamente en el HTML.
 
 ## Requisitos
 
-* Un navegador web moderno que soporte `navigator.mediaDevices` para la API de la cámara (para la función de escáner).
-* Acceso a la cámara del dispositivo (se pedirá permiso al activar el escáner).
+* Un navegador web moderno (Chrome, Firefox, Edge, Safari).
+* Para cargar los archivos `almacen_data.txt` y `correcciones.txt` correctamente, es recomendable servir la aplicación a través de un **servidor web local**. Abrir `index.html` directamente desde el sistema de archivos puede causar problemas de seguridad de CORS (Cross-Origin Resource Sharing) en algunos navegadores, impidiendo que los archivos `.txt` se carguen.
 
-## Notas de Desarrollo
+## Cómo Ejecutar
 
-* El archivo HTML se nombró `Untitled-2.html`. Considera renombrarlo a `index.html` para una mayor convención en proyectos web.
-* El campo `lote` y `unidad` en los resultados están mapeados a `item.unit` y `item.lote` respectivamente, lo que podría generar confusión. Revisa la lógica en el JavaScript si quieres que el campo "Lote" muestre `item.lote` y "Unidad" muestre `item.unit` o viceversa. Actualmente, el código asigna `item.unit` a "Lote" y `item.lote` a "Unidad" en la visualización, mientras que los datos se leen como `parts[2]` para `unit` y `parts[3]` para `lote`.
-* La lógica de extracción de los últimos 18 caracteres del código de barras escaneado (`scannedText.slice(-18)`) está implementada. Si tus códigos de barras tienen otra longitud o formato, necesitarás ajustar esta línea.
+1.  **Clonar o Descargar:** Descarga o clona este repositorio en tu máquina local.
+2.  **Crear Archivos de Datos:** Asegúrate de que `almacen_data.txt` y `correcciones.txt` existan en la misma carpeta que `index.html` y que contengan los datos en el formato especificado.
+3.  **Servidor Web Local (Recomendado):**
+    * **Python:** Si tienes Python instalado, puedes iniciar un servidor web simple navegando a la carpeta del proyecto en tu terminal y ejecutando:
+        ```bash
+        python -m http.server 8000
+        ```
+        Luego, abre tu navegador y ve a `http://localhost:8000`.
+    * **Node.js (con `http-server`):** Si tienes Node.js, puedes instalar `http-server` globalmente:
+        ```bash
+        npm install -g http-server
+        ```
+        Luego, navega a la carpeta del proyecto y ejecuta:
+        ```bash
+        http-server
+        ```
+        Abre tu navegador y ve a la dirección que te indique el terminal (generalmente `http://127.0.0.1:8080`).
+    * **Otros:** Puedes usar cualquier otro software de servidor web (Apache, Nginx, XAMPP, WAMP, MAMP) para servir la carpeta.
+4.  **Acceder:** Abre `index.html` en tu navegador a través de la URL del servidor local.
+
+## Uso
+
+1.  **Búsqueda:** Escribe tu término de búsqueda en el campo de entrada. Los resultados se actualizarán automáticamente a medida que escribes.
+2.  **Paginación:** Utiliza los botones "Anterior" y "Siguiente" para navegar por los resultados de la búsqueda.
+3.  **Escáner de Código de Barras:** Haz clic en el botón "Escanear" para abrir el modal del escáner. Asegúrate de conceder permisos de cámara a tu navegador. Centra el código de barras en el área de escaneo. Una vez detectado, el valor (últimos 18 caracteres) se ingresará en el campo de búsqueda.
+4.  **Ver Correcciones:** Haz clic en el botón "Ver Correcciones" para abrir el modal de tareas pendientes. Puedes marcar las correcciones como completadas usando las casillas de verificación. El estado de estas casillas se guarda automáticamente en el almacenamiento local de tu navegador.
+
+## Notas Técnicas
+
+* La librería `ZXing-JS` se carga desde un CDN para la funcionalidad de escaneo.
+* El estado de las correcciones marcadas se persiste en el `localStorage` del navegador, lo que significa que tus marcas se mantendrán incluso si cierras y vuelves a abrir la aplicación.
+* La aplicación es completamente del lado del cliente, no requiere una base de datos ni un backend complejo. Los datos se cargan desde archivos de texto simples.
+
+## Solución de Problemas Comunes
+
+* **"Error al cargar los datos: Error HTTP..."**: Asegúrate de que `almacen_data.txt` y `correcciones.txt` están en la misma carpeta que `index.html` y que estás sirviendo la aplicación a través de un servidor web local.
+* **"Acceso a la cámara denegado" / "Cámara no encontrada"**:
+    * Asegúrate de haber concedido permisos a tu navegador para usar la cámara.
+    * Verifica que ninguna otra aplicación esté usando la cámara en ese momento.
+    * Confirma que tu dispositivo tiene una cámara funcional.
+* **La búsqueda no funciona o los datos no aparecen**: Revisa el archivo `almacen_data.txt` para asegurarte de que los campos están correctamente separados por **tabulaciones (`\t`)** y no por espacios o comas.
+* **Las correcciones no cargan**: Revisa el archivo `correcciones.txt` para asegurarte de que los campos están correctamente separados por **puntos y comas (`;`)**.
 
 ---
 
