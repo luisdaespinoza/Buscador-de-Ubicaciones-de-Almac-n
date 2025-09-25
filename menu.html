@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú de Inventario</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .menu-button {
+            display: block;
+            width: 100%;
+            padding: 15px 25px;
+            font-size: 1.2em;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .menu-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        .menu-button.secondary {
+            background-color: #6c757d;
+        }
+        .menu-button.secondary:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Selecciona una Opción</h1>
+        <div class="button-group">
+            <a href="Untitled-2.html" class="menu-button">Búsqueda por Cámara</a>
+            <a href="preinventario.html" class="menu-button secondary">Búsquedas Preinventario</a>
+        </div>
+    </div>
+</body>
+</html>

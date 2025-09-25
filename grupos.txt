@@ -1,0 +1,500 @@
+01101	Fideos Carozzi
+01102	Fideos Esp. Carozzi
+01103	Rellenos Carozzi
+01104	Fideos San Remo
+01105	Fideos Aconcagua
+01106	Semola
+01107	Fideos Trattoria
+01108	Perrol
+01109	Arcos
+01110	Surtido Pastas
+01111	Fideos Industriales
+01112	Gift Pastas
+01113	Fideos Parma
+01114	Semola Parma
+01115	Maquila Pastas Molit
+01116	Fideos Espec. Parma
+01117	Pastas Vivo
+01119	Descto. Ctdo. Pastas
+01120	Platos Congelados
+01121	Congelados Arroz
+01401	Impulsivos
+01402	Cassatas
+01403	Postres
+01404	Multipack
+01405	Granel
+01406	Subproductos Helados
+01407	SF Impulsivos
+01408	SF Postres
+01409	SF Multipack
+01410	SF Granel
+01411	Otros Helados
+01501	Pastas del Verde
+01502	Aceites
+01503	Mayonesas
+01504	Infusiones
+01505	Rebozadores
+01512	Aceites Parma
+01513	Aceites San Remo
+01514	Aceite  Trattoria
+01515	Base Helado Soft
+01551	Amb.Prod.Importados
+01601	Pastas Don Vittorio
+01701	Arroz Carozzi
+01702	Arroz Listo
+01703	Arroz Marca
+01775	Arroz Miraflores
+01776	Arroz Preparado
+01777	Arroz Loncomilla
+01778	Arroz Marca Privada
+01780	Nacional Trattoria
+01781	Nacional Miraflores
+01782	Nacional Loncomilla
+01790	Importado Trattoria
+01791	Importado Miraflores
+01792	Importado Loncomilla
+01800	Pregraneado Trattori
+01801	Pregraneado Miraflor
+01802	Pregraneado Loncomil
+01810	Otros ArrozTrattoria
+01811	Otros Arroz Miraflor
+01812	Otros Arroz Loncomil
+01813	Otros
+01814	Arroz Industrial
+01815	Especiales
+01816	Disponible
+01901	Master Dog Seco
+01902	Master Dog Húmedo
+01903	Master Dog Snacks
+01904	Cachupín  Seco
+01905	Cachupín  Snacks
+01906	Guau Forte  Seco
+01907	Bulky  Seco
+01908	Master Cat Seco
+01909	Master Cat Húmedo
+01910	Master Cat Snacks
+01911	Don Cucho Seco
+01912	Cuchito  Seco
+01913	SIN ASIGNAR
+01914	Master Cat Higiene
+01915	Hunter Perros
+01916	Hunter Gatos
+01917	Super Premium Perros
+01918	Super Premium Gatos
+01919	Super Prem Perro Húm
+01920	Super Prem Gato Hume
+01921	Super Premium Snacks
+01922	Super Premium Arenas
+01923	Super Premium Snacks
+01924	Cachupín Húmedo
+01925	Cuchito Higiene
+02201	Caricia Refrescos
+02202	Sprim
+02203	Refreskids
+02204	Caricia Gaseosas
+02205	Sprim Light
+02206	Lacteo
+02207	Sprim Sport
+02208	Nectar FS
+02209	Dcto.Ctdo.Líquidos
+02210	Surtido Bebidas
+02211	Sprim Néctar
+02212	Jugos Vivo
+02213	Vivo Néctar
+02214	Vivo Mifrut
+02215	Vivo Gotas
+02216	Sprim Sport Gotas
+02217	Vivo Agua
+02218	Pulpas fruta  FS
+02219	Dcto.Ctdo.Bebida Pol
+02220	Vivo 100% fruta
+02251	Amb.Refrescos
+02252	Amb.Fructus
+02253	Amb.Gaseosas
+02259	Amb.Marca Priv.bebid
+02271	Jugos KT
+02275	Refresco Flavoraid
+02276	Jugos Match
+03301	Caricia Jalea
+03302	Amb.al Instante
+03303	Caricia  Diet
+03304	Caricia Flan
+03305	Amb. Crema
+03306	Helado
+03307	Amb.Sémola
+03308	Amb.Postres Preparad
+03309	Miel Colliguay
+03310	Surtido Postres
+03311	Postres Pie
+03312	Gelatina  KA
+03313	Flan  KA
+03314	Gelatinas KR
+03315	Flanes KR
+03316	Postres KR
+03317	Amb Jaleas Pouch
+03319	Descto.Ctdo.Postres
+03321	Amb. Premium
+03330	Endulzante
+03340	Postres Vivo
+03341	Mermelada Sin Azucar
+03342	Mermelada Agridulce
+03343	Mermelada Regular
+03351	Amb.Gelatinas
+03352	Amb.Gelatinas Diet
+03353	Amb.Flanes
+03354	Amb.Postres Liquidos
+03355	Postres Pouch
+03359	Amb.Marca Priv.Postr
+03375	Gelatinas Flavoraid
+03376	Flan Flavoraid
+04301	Legumbres
+04302	Conservas
+04303	Sopas y Crema Deshid
+04304	Productos Plant Base
+04401	Pomarola Tarro
+04402	Pomarola Tetra
+04403	Fiesta Tarro
+04404	Fiesta Tetra
+04405	Tomate Conserva
+04406	Food Service
+04407	Marcas Privadas
+04408	Salsas Especiales
+04409	Pasta Tomate
+04410	Surtido Tomates
+04411	Tom.Conserva Tercero
+04412	Flexibles Pomarola
+04413	San Remo Tarro
+04414	San Remo Tetra
+04415	Salsas Preparadas
+04416	Ketchup
+04417	Sopas Listas
+04418	Salsas Toscanas
+04419	Descto.Ctdo.Tomates
+04420	Salsa Trattoria
+04421	Flexibles  San Remo
+04422	Flexibles  Parma
+04423	Aderezos
+04424	Aderezos Chile
+04425	Salsas Dip
+04430	Especiales Vivo
+04431	Pulpas Manzana
+04432	Otras Pulpas
+04433	Pulpas Durazno
+04434	Pulpas Peras
+04435	Concentrados Manzana
+04436	Otros Jugos Concentr
+04437	Aromas
+04438	Comp. Frutas  y Veg.
+04441	Plantas de Tomate
+04442	Quimicos y Fertiliz.
+04443	Embalajes Exportac.
+04450	Pulpas Funcionales
+04451	Jugos Vegetales
+04452	Jugos NFC
+05401	PV Burritos
+05402	PV Tortillas Mexican
+05403	Salsas Tex Mex
+05404	Salsas Mexicanas doy
+05405	Sazonadores
+05406	Conservas Mexicanas
+05407	PV Chips  Tortillas
+05408	PV Chips Saborizados
+05409	Papotas
+05410	PV Otros Snacks Sala
+05411	Vivo Wraps
+05501	Har.Fraccio.Carozzi
+05502	Har.Panadera Carozzi
+05503	Har. Marca Privada
+05504	Disponible
+05505	Har.Especial Carozzi
+05510	Surtido Harinas
+05511	Har.Fraccio.Mariposa
+05512	Har.Panad.Mariposa
+05513	Har.Especial Maripos
+05514	Har.Tostada Mariposa
+05515	Har. Mariposa C.Masi
+05516	Harinas Industriales
+05519	Descto.Ctdo.Harinas
+05521	Har.Fraccionada TG.
+05522	Har.Panadera TG.
+05523	Har.Especial TG.
+05524	Har. TG C.Masivo
+05531	Premix Panaderas
+05532	Premix Pasteleras
+05533	Disponible
+05534	Cocina Facil
+05575	Harina Frac.Selecta
+05576	Har. Panad. Selecta
+05577	Tostadas Selecta
+05578	Pasteleria Selecta
+05579	Congelados Selecta
+05580	Harina Fr.Mont Blanc
+05581	Harina PanMont Blanc
+05590	Tortalista
+06601	SubProductos Nos
+06602	SubProductos Caricia
+06603	SubProductos Quilpué
+06604	Desechos Quilpué
+06605	Desechos Nos
+06606	Sub productos Teno
+06607	Desechos Teno
+06608	Sub productos Ambro.
+06609	Sub Productos TG.
+06610	Sub Prod.Mariposa
+06611	Sub Productos Avenas
+06612	Sub P. Pta.Malloco
+06613	Sub Prod. Pta. Arroz
+06619	Desechos Lontué
+06701	Harina de Arroz
+07001	ACOMPAÑAMIENTOS
+07002	ALIÑOS
+07003	BACHAS
+07004	BARQUILLOS
+07005	BATIDOS
+07006	BOLLERIA
+07007	BOMBONES
+07008	BURRITOS
+07009	CAFE CALIENTE
+07010	CAFE EN GRANO
+07011	CAFE FRIO
+07012	CARNES
+07013	CHEESECAKES
+07014	CHOCOLATE CALIENTE
+07015	CHOCOLATES
+07016	COMBOS
+07017	COPAS
+07018	EMPANADAS
+07019	ENSALADAS
+07020	GALLETAS
+07021	GASEOSAS
+07022	GUISOS
+07023	INSUMOS
+07024	JUGOS
+07025	LACTEOS
+07026	LASAÑAS
+07027	MAQUINAS
+07028	MASAS
+07029	PALETAS
+07030	PANQUEQUES
+07031	PASTELES & PIES
+07032	PIZZAS
+07033	POSTRES
+07034	POSTRES HELADOS
+07035	POTES HELADOS
+07036	QUICHES
+07037	RELLENOS
+07038	SANDWICHES
+07039	SOPAS
+07040	TE
+07041	TORTAS
+07042	BEBIDAS ALCOHOLICAS
+07043	PLATOS PREPARADOS
+07044	BOMBONES HELADOS
+07045	CARAMELO & DULCES
+07046	PASTAS
+07097	Costo Mat.Directo
+07098	SERVICIO OPERACIONAL
+07099	SERVICIO NO OPER.
+71010	DISPONIBLE
+71011	DISPONIBLE
+71012	DISPONIBLE
+71013	DISPONIBLE
+71014	DISPONIBLE
+71015	DISPONIBLE
+71016	DISPONIBLE
+71017	DISPONIBLE
+71018	DISPONIBLE
+71019	DISPONIBLE
+71020	DISPONIBLE
+71021	DISPONIBLE
+71022	DISPONIBLE
+71023	DISPONIBLE
+71024	DISPONIBLE
+71025	DISPONIBLE
+71026	DISPONIBLE
+71027	DISPONIBLE
+71028	DISPONIBLE
+71029	DISPONIBLE
+71030	DISPONIBLE
+71031	DISPONIBLE
+71032	DISPONIBLE
+71033	DISPONIBLE
+71034	DISPONIBLE
+71035	DISPONIBLE
+71036	DISPONIBLE
+71037	DISPONIBLE
+71038	DISPONIBLE
+71039	DISPONIBLES
+71040	DISPONIBLES
+71041	DISPONIBLES
+07121	Aceites
+07131	Atún
+07132	Palmito
+07133	Piñas
+07134	Aderezos
+07135	Queso Rallado
+07136	Choritos
+07137	Mieles
+07138	ADEREZOS KRAFT
+07139	Duraznos
+07140	Jurel
+07141	Champiñones San Remo
+07142	Surtidos de Mariscos
+07143	Legumbre San Remo
+07144	Untable
+07145	Arvejas
+07146	Choclitos San Remo
+07147	Condimentos
+07148	Alimentos Instatanéo
+07149	Congelados
+07150	DISPONIBLE
+07201	Bebidas Líquidas
+07202	Bebidas Energéticas
+07203	Sprim Caso
+07204	Jugo Vivo Caso
+07205	Aguas Minerales
+07301	Te
+07302	Hierbas
+07401	Aseo Hogar
+07402	Cuidado Personal
+07403	Libreria
+07404	Pilas
+07405	Juguetes SZ
+07501	Endulzantes
+07502	Chicle
+07503	Bombones
+07504	Snacks
+07601	Licores
+07602	Espumantes
+07603	Vinos
+07701	Caramelos Caso y Cia
+07801	MIEL
+07802	ACEITES Y GRASAS
+07803	ACIDULANTES
+07804	ALIMENTACIÓN ANIMAL
+07805	AZÚCARES
+07806	COCO RALLADO
+07807	EDULCORANTES
+07808	EMBALAJES
+07809	EMULSIONANTES
+07810	ESPESANTES
+07811	FIBRAS
+07812	GRANOS Y CEREALES
+07813	LACTEOS
+07814	FOSFATOS
+07815	MANI VARIEDADES
+07816	OTROS
+07817	SABORES
+07818	SEMILLAS
+07819	VITAMINAS
+07998	Otros Prod.Food Serv
+07999	Serv. Logisticos
+08101	Chocolate Familiar
+08102	Chocolates Regalos
+08103	Snack Chocolates
+08104	Snack Bañados
+08105	Chocolate Estacional
+08106	Chocolate Industrial
+08110	Surtido Chocolates
+08119	Dscto.Ctdo.Chocolate
+08121	Calaf Snacks Chocola
+08122	Calaf Snacks Bañados
+08123	Calaf Choco Estacion
+08124	Alfajores
+08125	Disponible
+08151	Amb.Choc.Familiar
+08152	Amb.Choc.Regalos
+08153	Amb.Snack Chocolate
+08154	Amb.Snack Bañados
+08155	Amb.Choc.Estacional
+08156	Amb.Choc.Industrial
+08159	Amb.Choc.Surtidos
+08170	Disponible
+08201	Gall. Dulce Familiar
+08202	Gall.No Dulce Famili
+08203	Gall. Oblea Familiar
+08204	Gall. Sandwich
+08205	Bizcochos
+08206	Snack Galletas
+08207	Gall. Industriales
+08208	Galleta Estacionales
+08209	Snacks Frutos Secos
+08210	Surtido Galletas
+08211	Snacks Popcorn
+08219	Dscto.Ctdo. Galletas
+08221	Calaf Galleta Sandwi
+08222	Calaf Galletas Snack
+08223	Calaf Galleta Famili
+08224	Disponible
+08251	Amb.Snack Galletas
+08270	Disponible
+08301	Caramelos
+08302	Caramelos Estacional
+08303	Chicles
+08305	Gomitas
+08306	Gomitas Estacional
+08310	Surtido Caramelos
+08319	Dscto.Ctdo. Confites
+08321	Calaf Caram Blandos
+08322	Calaf Caram.Estacion
+08323	Disponible
+08324	Disponible
+08351	Amb.Caram.Arbolitos
+08352	Amb.Caram.Envueltos
+08353	Amb.Caram.Drops
+08354	Amb.Caram.Blandos
+08355	Amb.Gomitas
+08356	Amb.Caram.Grageados
+08357	Amb.Caram.Stick's
+08358	Amb.Caram.Regalos
+08359	Amb.Chupetes
+08360	Amb.Caram.Estacional
+08361	Amb.Miel
+08362	Amb.Chicles
+08363	Amb. Marshmallows
+08369	Amb.Caram.Surtidos
+08370	Amb.Marca Priv.Caram
+08601	Cereales Infantiles
+08602	Snack Cereales
+08603	Granola
+08604	Cereales Vivo
+08606	Cereales Industrial
+08607	Cereales snack Vivo
+08608	disponible
+08620	Granola Vivo
+08621	Natur Cereales Famil
+08622	Natur Cereales Snack
+08651	Avenas
+08652	Avena Vivo
+08661	Avenas Exportacion
+08663	Cereales Exportación
+08664	Avenas Groat Cortada
+08665	Avena Hojuela Tradic
+08666	Avena Hojuela Instan
+08667	Avena Hojuela Entera
+08668	Avena con Cascara
+08669	Harina de Avena
+08670	Harina Hojuela Avena
+08801	Chocolates
+08802	Galletas
+08803	Caramelos
+08809	Dcto.Contado Chocola
+08819	Dcto.Contado Galleta
+09301	Serv.Financiero Ecsa
+09302	Serv.Finan.Agrovivo
+09303	Serv.Finan.Cantabria
+09304	Serv.Finan.Caso&Cia.
+09305	Serv.Finan.Emporio
+09306	Serv.Finan.Chorombo
+09307	Serv.Finan.Las Gaita
+09308	Serv.Finan.Interandi
+09309	Serv.Financiero Ecsa
+09901	Asesorías
+09902	Servicios - Venta
+09903	Activos Fijos
+09904	Recuper.de Gastos
+09988	SERVICIO TI
+01121	Congelados Arroz
+20101	Fideos Carozzi Expor
+20102	Rellenos Export
+20103	F.San Remo Export
