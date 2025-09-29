@@ -33,7 +33,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px var(--shadow-color);
             width: 100%;
-            max-width: 1000px; /* Reducción de ancho adecuada para 4 columnas */
+            max-width: 1000px;
             box-sizing: border-box;
             position: relative;
         }
@@ -114,7 +114,7 @@
             border: 1px solid var(--border-color);
             padding: 10px;
             text-align: left;
-            font-size: 0.9em; /* Ajuste de fuente */
+            font-size: 0.9em; 
             vertical-align: top;
         }
 
@@ -169,8 +169,8 @@
                 </div>
             </div>
             <div class="input-group">
-                <label for="searchInput">Filtrar Ubicaciones</label>
-                <input type="text" id="searchInput" placeholder="Buscar por Ubicación">
+                <label for="searchInput">Buscar por Ubicación o Material</label>
+                <input type="text" id="searchInput" placeholder="Buscar por Ubicación, Código o Nombre de Material">
             </div>
             <button id="clearButton">Limpiar Filtros</button>
         </div>
@@ -199,6 +199,7 @@
         let allRawData = []; 
         let materialWeightMap = {}; 
         let codeToGroupMap = {}; 
+        let consolidatedDataCache = []; 
 
         const searchInput = document.getElementById('searchInput');
         const grupoFilterContainer = document.getElementById('grupoFilterContainer');
@@ -207,6 +208,7 @@
 
         function safeParseNumber(str) {
             if (!str) return 0;
+            // Maneja el formato europeo/chileno (punto como miles, coma como decimal)
             return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
         }
 
@@ -214,19 +216,23 @@
             try {
                 const response = await fetch('materiales.txt');
                 if (!response.ok) {
-                    throw new Error(`Error al cargar materiales.txt: ${response.status}`);
+                    throw new Error(`Error ${response.status} al cargar materiales.txt. Asegúrate de que el archivo esté en la misma carpeta que preinventario.html.`);
                 }
                 const textData = await response.text();
                 textData.trim().split('\n').forEach(line => {
+                    // La división por tabulación o espacios es crucial aquí
                     const parts = line.split(/[\t\s]+/).filter(Boolean);
                     if (parts.length >= 2) {
                         const materialCode = parts[0].trim();
+                        // El factor de peso es la segunda columna
                         const weight = safeParseNumber(parts[1]); 
                         materialWeightMap[materialCode] = weight;
                     }
                 });
+                console.log('✅ materiales.txt cargado correctamente. Total de factores de peso:', Object.keys(materialWeightMap).length);
             } catch (error) {
-                console.error('Error al cargar materiales.txt:', error);
+                console.error('❌ ERROR CRÍTICO al cargar materiales.txt:', error.message);
+                alert('Advertencia: No se pudo cargar el archivo materiales.txt. La columna "Cant. Calculada" será igual a la "Cant. Original". Por favor, revisa la consola (F12) para más detalles.');
             }
         }
 
@@ -234,7 +240,7 @@
             try {
                 const response = await fetch('grupos.txt');
                 if (!response.ok) {
-                    throw new Error(`Error al cargar el archivo grupos.txt: ${response.status}`);
+                    throw new Error(`Error ${response.status} al cargar el archivo grupos.txt.`);
                 }
                 const textData = await response.text();
                 textData.trim().split('\n').forEach(line => {
@@ -245,8 +251,9 @@
                         codeToGroupMap[code] = description; 
                     }
                 });
+                console.log('✅ grupos.txt cargado correctamente.');
             } catch (error) {
-                console.error('Error al cargar el archivo grupos.txt:', error);
+                console.error('❌ ERROR al cargar grupos.txt:', error.message);
             }
         }
 
@@ -258,21 +265,22 @@
             try {
                 const response = await fetch('almacen_data.txt');
                 if (!response.ok) {
-                    throw new Error(`Error al cargar almacen_data.txt: ${response.status}`);
+                    throw new Error(`Error ${response.status} al cargar almacen_data.txt.`);
                 }
                 const textData = await response.text();
                 
                 allRawData = textData.trim().split('\n').filter(line => line.includes('\t')).map(line => {
                     const parts = line.split('\t');
                     
-                    const materialCode = parts[1] ? parts[1].trim() : 'SIN_MATERIAL'; // Columna 2
-                    const materialDescription = parts[4] ? parts[4].trim() : 'SIN DESCRIPCIÓN'; // Columna 5
+                    const materialCode = parts[1] ? parts[1].trim() : 'SIN_MATERIAL'; 
+                    const materialDescription = parts[4] ? parts[4].trim() : 'SIN DESCRIPCIÓN'; 
                     const materialLabel = materialCode + ' - ' + materialDescription; 
                     
                     const grupoCode = parts[5] ? parts[5].trim() : 'SIN_GRUPO';
                     const grupoDescription = codeToGroupMap[grupoCode] || 'GRUPO DESCONOCIDO';
                     const grupoLabel = grupoCode + ' - ' + grupoDescription; 
                     
+                    // Si materialWeightMap está vacío (por fallo de carga), weightFactor será 1
                     const weightFactor = materialWeightMap[materialCode] || 1;
                     const quantity = safeParseNumber(parts[6]);
                     
@@ -289,12 +297,13 @@
                     };
                 }).filter(item => item.location && item.quantity !== 0);
                 
+                console.log('✅ almacen_data.txt cargado correctamente.');
                 populateFilters();
-                calculateAndDisplayConsolidation();
+                calculateAndCacheConsolidation();
 
             } catch (error) {
-                console.error('Error en carga de almacen_data:', error);
-                resultsTableBody.innerHTML = `<tr><td colspan="4" style="color: red;">Error al cargar datos: ${error.message}.</td></tr>`;
+                console.error('❌ ERROR al cargar almacen_data.txt:', error.message);
+                resultsTableBody.innerHTML = `<tr><td colspan="4" style="color: red;">Error al cargar datos principales: ${error.message}.</td></tr>`;
             }
         }
 
@@ -316,7 +325,7 @@
             });
 
             grupoFilterContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', calculateAndDisplayConsolidation);
+                checkbox.addEventListener('change', calculateAndCacheConsolidation); 
             });
             
             if (gruposLabels.length === 0) {
@@ -324,19 +333,16 @@
             }
         }
 
-        function calculateAndDisplayConsolidation() {
+        function calculateAndCacheConsolidation() {
             resultsTableBody.innerHTML = '<tr><td colspan="4">Calculando consolidación...</td></tr>';
             
             setTimeout(() => {
                 const selectedGruposLabels = Array.from(grupoFilterContainer.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
-                const searchTerm = searchInput.value.toLowerCase().trim();
                 
-                // 1. Filtrar los datos crudos por las etiquetas de grupo seleccionadas (Lógica de filtro se mantiene)
                 const dataToConsolidate = allRawData.filter(item => {
                     return selectedGruposLabels.length === 0 || selectedGruposLabels.includes(item.grupoLabel);
                 });
 
-                // 2. Agrupar y sumar los datos
                 const groupedData = {};
 
                 dataToConsolidate.forEach(item => {
@@ -345,7 +351,6 @@
                             location: item.location,
                             totalQuantity: 0,
                             totalWeighted: 0,
-                            // Solo necesitamos almacenar los materiales
                             materials: new Map() 
                         };
                     }
@@ -353,22 +358,46 @@
                     groupedData[item.location].totalQuantity += item.quantity;
                     groupedData[item.location].totalWeighted += item.weightedQuantity;
                     
-                    // Almacenar el par de código y descripción del MATERIAL
                     if (item.materialCode && item.materialDescription) {
                         groupedData[item.location].materials.set(item.materialCode, item.materialDescription);
                     }
                 });
                 
-                // 3. Convertir a array y aplicar filtro de ubicación
-                let consolidatedArray = Object.values(groupedData).sort((a, b) => a.location.localeCompare(b.location));
+                consolidatedDataCache = Object.values(groupedData).sort((a, b) => a.location.localeCompare(b.location));
                 
-                const filteredByLocation = consolidatedArray.filter(item => {
-                    return item.location.toLowerCase().includes(searchTerm);
-                });
-                
-                displayResults(filteredByLocation);
+                filterAndDisplayResults();
             }, 50);
         }
+
+        function filterAndDisplayResults() {
+            resultsTableBody.innerHTML = '<tr><td colspan="4">Filtrando...</td></tr>';
+            
+            setTimeout(() => {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                
+                if (searchTerm === '') {
+                    displayResults(consolidatedDataCache);
+                    return;
+                }
+                
+                const filteredBySearch = consolidatedDataCache.filter(item => {
+                    // 1. Búsqueda por Ubicación
+                    if (item.location.toLowerCase().includes(searchTerm)) {
+                        return true;
+                    }
+                    
+                    // 2. Búsqueda por Código o Nombre de Material
+                    const materialsMatch = Array.from(item.materials.entries()).some(([code, description]) => {
+                        return code.toLowerCase().includes(searchTerm) || description.toLowerCase().includes(searchTerm);
+                    });
+                    
+                    return materialsMatch;
+                });
+                
+                displayResults(filteredBySearch);
+            }, 50);
+        }
+
 
         function displayResults(data) {
             resultsTableBody.innerHTML = '';
@@ -381,11 +410,11 @@
             data.forEach(item => {
                 const row = resultsTableBody.insertRow();
                 
-                // Ubicación (15%)
+                // Ubicación
                 const cellLocation = row.insertCell();
                 cellLocation.textContent = item.location;
 
-                // Materiales Consolidados (45%)
+                // Materiales Consolidados
                 const cellMaterials = row.insertCell();
                 cellMaterials.classList.add('list-cell');
                 const materialsText = Array.from(item.materials.entries()).map(([code, description]) => {
@@ -393,14 +422,14 @@
                 }).join('<br>');
                 cellMaterials.innerHTML = materialsText || 'N/A';
                 
-                // Cantidad Original (Suma) (20%)
+                // Cantidad Original (Suma)
                 const cellQuantity = row.insertCell();
                 cellQuantity.textContent = item.totalQuantity.toLocaleString('es-CL', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 });
 
-                // Cantidad Calculada (División) (20%)
+                // Cantidad Calculada (División)
                 const cellWeighted = row.insertCell();
                 cellWeighted.textContent = item.totalWeighted.toLocaleString('es-CL', {
                     minimumFractionDigits: 2,
@@ -410,15 +439,14 @@
         }
 
         // Event listeners
-        searchInput.addEventListener('input', calculateAndDisplayConsolidation);
+        searchInput.addEventListener('input', filterAndDisplayResults);
         
         clearButton.addEventListener('click', () => {
             searchInput.value = '';
             grupoFilterContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
-            calculateAndDisplayConsolidation();
+            calculateAndCacheConsolidation(); 
         });
 
-        // Iniciar la carga de datos al cargar la página
         document.addEventListener('DOMContentLoaded', loadRawData);
     </script>
 </body>
